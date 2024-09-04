@@ -1,19 +1,90 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Ensure you've installed react-native-vector-icons
+import React from "react";
+import { StyleSheet, TextInput, Text, View, Button } from "react-native";
+import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
+import axios from "axios";
 
-const MicrophoneScreen = () => {
-  const [isListening, setIsListening] = useState(false);
-  const [text, setText] = useState('');
+export default function App() {
+  const [recording, setRecording] = React.useState();
+  const [recordings, setRecordings] = React.useState([]);
+  const [text, setText] = React.useState("");
+  const [response, setResponse] = React.useState(null);
 
-  const handleMicrophonePress = () => {
-    if (isListening) {
-      setText('Stopped listening');
-    } else {
-      setText('Listening...');
+  async function startRecording() {
+    try {
+      const perm = await Audio.requestPermissionsAsync();
+      if (perm.status === "granted") {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
+        );
+        setText("Listening...");
+        setRecording(recording);
+      }
+    } catch (err) {}
+  }
+
+  async function stopRecording() {
+    setRecording(undefined);
+
+    await recording.stopAndUnloadAsync();
+    const { sound, status } = await recording.createNewLoadedSoundAsync();
+    const recordingURI = recording.getURI();
+
+    try {
+      // Read the file from the local file system as a binary
+      const fileInfo = await FileSystem.getInfoAsync(recordingURI);
+      if (!fileInfo.exists) {
+        throw new Error("File does not exist");
+      }
+      const fileUri = fileInfo.uri;
+
+      const audioBytes = await FileSystem.readAsStringAsync(fileUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const apiKey = "AIzaSyBTAAv6orzl6HxDtSDO975wx_5K-ueLdtY"; // Replace with your actual API key
+
+      axios.post(
+        `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
+        {
+          audio: {
+            content: audioBytes,
+          },
+          config: {
+            encoding: "MP3", 
+            sampleRateHertz: 16000,
+            languageCode: "en-US",
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((res)=>{
+        setResponse(res);
+        }
+      );
+
+      const transcription = response.data.results
+      setText(`Transcription result: ${transcription[0].alternatives[0].transcript}`);
+      console.log(transcription[0].alternatives[0])
+
+    } catch (error) {
+      console.error(
+        "Error uploading audio to Google Speech-to-Text API:",
+        error
+      );
     }
-    setIsListening(!isListening);
-  };
+  }
+
+  function clearRecordings() {
+    setRecordings([]);
+  }
 
   return (
     <View style={styles.container}>
@@ -25,38 +96,40 @@ const MicrophoneScreen = () => {
         placeholder="Start typing..."
         multiline
       />
-      <TouchableOpacity style={styles.microphoneButton} onPress={handleMicrophonePress}>
-        <Icon name="mic" size={30} color="#fff" />
-      </TouchableOpacity>
+      <Button
+        title={recording ? "Stop Recording" : "Start Recording\n\n\n"}
+        onPress={recording ? stopRecording : startRecording}
+      />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
   textArea: {
     height: 150,
-    width: '100%',
-    borderColor: '#ccc',
+    width: "100%",
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     marginBottom: 20,
   },
-  microphoneButton: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#007AFF',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+    marginRight: 40,
+  },
+  fill: {
+    flex: 1,
+    margin: 15,
   },
 });
-
-export default MicrophoneScreen;
