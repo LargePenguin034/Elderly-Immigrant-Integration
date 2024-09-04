@@ -6,7 +6,6 @@ import axios from "axios";
 
 export default function App() {
   const [recording, setRecording] = React.useState();
-  const [recordings, setRecordings] = React.useState([]);
   const [text, setText] = React.useState("");
   const [response, setResponse] = React.useState(null);
 
@@ -28,7 +27,7 @@ export default function App() {
   }
 
   async function stopRecording() {
-    setRecording(undefined);
+    setRecording(null);
 
     await recording.stopAndUnloadAsync();
     const { sound, status } = await recording.createNewLoadedSoundAsync();
@@ -48,14 +47,15 @@ export default function App() {
 
       const apiKey = "AIzaSyBTAAv6orzl6HxDtSDO975wx_5K-ueLdtY"; // Replace with your actual API key
 
-      axios.post(
+      // Send the audio data to Google Speech-to-Text
+      const response = await axios.post(
         `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
         {
           audio: {
             content: audioBytes,
           },
           config: {
-            encoding: "MP3", 
+            encoding: "MP3", // Ensure the audio file format matches
             sampleRateHertz: 16000,
             languageCode: "en-US",
           },
@@ -65,25 +65,19 @@ export default function App() {
             "Content-Type": "application/json",
           },
         }
-      ).then((res)=>{
-        setResponse(res);
-        }
       );
 
-      const transcription = response.data.results
-      setText(`Transcription result: ${transcription[0].alternatives[0].transcript}`);
-      console.log(transcription[0].alternatives[0])
-
+      const transcription = response.data.results;
+      setText(
+        `${transcription[0].alternatives[0].transcript}`
+      );
+      console.log(transcription[0].alternatives[0]);
     } catch (error) {
       console.error(
         "Error uploading audio to Google Speech-to-Text API:",
         error
       );
     }
-  }
-
-  function clearRecordings() {
-    setRecordings([]);
   }
 
   return (
