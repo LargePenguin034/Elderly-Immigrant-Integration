@@ -1,85 +1,24 @@
 import React from "react";
-import { StyleSheet, TextInput, Text, View, Button } from "react-native";
+import { TouchableOpacity, StyleSheet, TextInput, Text, View, Button } from "react-native";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import audioUtils from '@/components/audioUtils.js';
 
 export default function App() {
   const [recording, setRecording] = React.useState();
-  const [inputSpeech, setinputSpeech] = React.useState("");
+  const [inputSpeech, setInputSpeech] = React.useState("");
   const [translation, setTranslation] = React.useState("");
   const [response, setResponse] = React.useState(null);
 
-  async function startRecording() {
-    try {
-      const perm = await Audio.requestPermissionsAsync();
-      if (perm.status === "granted") {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-        });
-        const { recording } = await Audio.Recording.createAsync(
-          Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-        );
-        setText("Listening...");
-        setRecording(recording);
-      }
-    } catch (err) {}
-  }
-
-  async function stopRecording() {
-    setRecording(null);
-
-    await recording.stopAndUnloadAsync();
-    const { sound, status } = await recording.createNewLoadedSoundAsync();
-    const recordingURI = recording.getURI();
-
-    try {
-      // Read the file from the local file system as a binary
-      const fileInfo = await FileSystem.getInfoAsync(recordingURI);
-      if (!fileInfo.exists) {
-        throw new Error("File does not exist");
-      }
-      const fileUri = fileInfo.uri;
-
-      const audioBytes = await FileSystem.readAsStringAsync(fileUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      const apiKey = "AIzaSyBTAAv6orzl6HxDtSDO975wx_5K-ueLdtY"; // Replace with your actual API key
-
-      // Send the audio data to Google Speech-to-Text
-      const response = await axios.post(
-        `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
-        {
-          audio: {
-            content: audioBytes,
-          },
-          config: {
-            encoding: "MP3", // Ensure the audio file format matches
-            sampleRateHertz: 16000,
-            languageCode: "en-US",
-          },
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const transcription = response.data.results;
-      setText(
-        `${transcription[0].alternatives[0].transcript}`
-      );
-      console.log(transcription[0].alternatives[0]);
-    } catch (error) {
-      console.error(
-        "Error uploading audio to Google Speech-to-Text API:",
-        error
-      );
+  const handlePress = () => {
+    if (recording) {
+      audioUtils.stopRecording(recording, setRecording, setInputSpeech);
+    } else {
+      audioUtils.startRecording(setRecording, setInputSpeech);
     }
-  }
+  };
 
   return (
     <View style={styles.container}>
@@ -87,22 +26,25 @@ export default function App() {
         style={styles.textArea}
         value={inputSpeech}
         editable={false}
-        onChangeText={(newinputSpeech) => setinputSpeech(newinputSpeech)}
+        onChangeText={(newinputSpeech) => setInputSpeech(newinputSpeech)}
         placeholder="Start typing..."
         multiline
       />
       <TextInput
         style={styles.textArea}
-        value={inputSpeech}
+        value={translation}
         editable={false}
-        onChangeText={(newinputSpeech) => setinputSpeech(newinputSpeech)}
+        onChangeText={(newTranslation) => setInputSpeech(newTranslation)}
         placeholder="Start typing..."
         multiline
       />
-      <Button
-        title={recording ? "Stop Recording" : "Start Recording\n\n\n"}
-        onPress={recording ? stopRecording : startRecording}
-      />
+      <TouchableOpacity style={styles.button} onPress={handlePress}>
+        {recording ? (
+          <Icon name="stop" size={30} color="#fff" /> // Change icon when recording
+        ) : (
+          <Icon name="mic" size={30} color="#fff" /> // Default icon
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
@@ -113,6 +55,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
     alignItems: "center",
     justifyContent: "center",
+  },
+  button: {
+    backgroundColor: '#007bff',
+    borderRadius: 50,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textArea: {
     height: 150,
