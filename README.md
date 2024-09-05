@@ -34,3 +34,5 @@ if you are working on api go to componets/apis.js
 if you are working on streaming audio go to components/audioUtils.js
 
 i knoe how to pull
+
+yello bitches -wei
