@@ -91,6 +91,14 @@ export default function App() {
         placeholder="Start typing..."
         multiline
       />
+      <TextInput
+        style={styles.textArea}
+        value={inputSpeech}
+        editable={false}
+        onChangeText={(newinputSpeech) => setinputSpeech(newinputSpeech)}
+        placeholder="Start typing..."
+        multiline
+      />
       <Button
         title={recording ? "Stop Recording" : "Start Recording\n\n\n"}
         onPress={recording ? stopRecording : startRecording}
@@ -102,12 +110,13 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#000000",
     alignItems: "center",
     justifyContent: "center",
   },
   textArea: {
     height: 150,
+    backgroundColor: "#fff",
     width: "100%",
     borderColor: "#ccc",
     borderWidth: 1,
