@@ -1,8 +1,12 @@
 import React from "react";
 import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView } from "react-native";
+import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
+import axios from "axios";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
 import audioUtils from '@/components/audioUtils.js'; // Assuming this file contains audio recording logic
+import SettingsScreen from '@/components/settings';
 
 export default function App() {
   const [recording, setRecording] = React.useState();
@@ -29,8 +33,8 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="settings-outline" size={24} color="white" />
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Settings')}>
+        <Ionicons name="settings-outline" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Translatify</Text>
         <TouchableOpacity style={styles.headerButton}>
