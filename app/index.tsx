@@ -6,7 +6,8 @@ import axios from "axios";
 
 export default function App() {
   const [recording, setRecording] = React.useState();
-  const [text, setText] = React.useState("");
+  const [inputSpeech, setinputSpeech] = React.useState("");
+  const [translation, setTranslation] = React.useState("");
   const [response, setResponse] = React.useState(null);
 
   async function startRecording() {
@@ -84,9 +85,9 @@ export default function App() {
     <View style={styles.container}>
       <TextInput
         style={styles.textArea}
-        value={text}
+        value={inputSpeech}
         editable={false}
-        onChangeText={(newText) => setText(newText)}
+        onChangeText={(newinputSpeech) => setinputSpeech(newinputSpeech)}
         placeholder="Start typing..."
         multiline
       />
