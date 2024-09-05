@@ -14,7 +14,7 @@ export default function App() {
 
   const handlePress = () => {
     if (recording) {
-      audioUtils.stopRecording(recording, setRecording, setInputSpeech);
+      audioUtils.stopRecording(recording, setRecording, setInputSpeech, setTranslation);
     } else {
       audioUtils.startRecording(setRecording, setInputSpeech);
     }
@@ -34,7 +34,7 @@ export default function App() {
         style={styles.textArea}
         value={translation}
         editable={false}
-        onChangeText={(newTranslation) => setInputSpeech(newTranslation)}
+        onChangeText={(newTranslation) => setTranslation(newTranslation)}
         placeholder="Start typing..."
         multiline
       />

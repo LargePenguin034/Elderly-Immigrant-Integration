@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import Config from 'react-native-config';
 
 export async function uploadAudioToGoogleSpeech(recordingURI) {
   try {
@@ -14,11 +15,11 @@ export async function uploadAudioToGoogleSpeech(recordingURI) {
       encoding: FileSystem.EncodingType.Base64,
     });
 
-    const apiKey = "AIzaSyBTAAv6orzl6HxDtSDO975wx_5K-ueLdtY"; // Replace with your actual API key
+    const GOOGLE_API_KEY = 'AIzaSyApSRpKSpSzeNKcnldtuBoGQ62_ZSUPX5Y';
 
     // Send the audio data to Google Speech-to-Text
     const response = await axios.post(
-      `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
+      `https://speech.googleapis.com/v1/speech:recognize?key=${GOOGLE_API_KEY}`,
       {
         audio: {
           content: audioBytes,
@@ -42,3 +43,33 @@ export async function uploadAudioToGoogleSpeech(recordingURI) {
     throw error;
   }
 }
+
+export async function uploadGoogleTranslate(text) {
+    try {
+        const GOOGLE_API_KEY = 'AIzaSyApSRpKSpSzeNKcnldtuBoGQ62_ZSUPX5Y';
+      const response = await axios.post(
+        `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_API_KEY}`,
+        {
+          q: text,
+          target: "zh-CN",
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      const translatedText = response.data.data.translations[0].translatedText;
+      console.log('Translated Text:', translatedText);
+      return translatedText;
+    } catch (error) {
+      console.error('Error translating text:', error);
+      throw error;
+    }
+  };
+
+export default {
+    uploadAudioToGoogleSpeech,
+    uploadGoogleTranslate,
+  };

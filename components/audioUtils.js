@@ -1,7 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import { Audio } from "expo-av";
-import { uploadAudioToGoogleSpeech } from "./apis";
+import Api from "./apis";
 
 async function startRecording(setRecording, setInputSpeech) {
   try {
@@ -22,7 +22,12 @@ async function startRecording(setRecording, setInputSpeech) {
   }
 }
 
-async function stopRecording(recording, setRecording, setInputSpeech) {
+async function stopRecording(
+  recording,
+  setRecording,
+  setInputSpeech,
+  setTranslation
+) {
   setRecording(null);
 
   await recording.stopAndUnloadAsync();
@@ -35,12 +40,12 @@ async function stopRecording(recording, setRecording, setInputSpeech) {
     throw new Error("File does not exist");
   }
   const fileUri = fileInfo.uri;
+  let transcription;
 
   try {
-    const transcription = await uploadAudioToGoogleSpeech(recordingURI);
+    transcription = await Api.uploadAudioToGoogleSpeech(recordingURI);
     if (transcription) {
       setInputSpeech(`${transcription[0].alternatives[0].transcript}`);
-      console.log(transcription[0].alternatives[0]);
     } else {
       setInputSpeech("talk for at least 2 seconds");
     }
@@ -48,7 +53,18 @@ async function stopRecording(recording, setRecording, setInputSpeech) {
     setInputSpeech("Error processing audio");
   }
 
-  
+  try {
+    const translation = await Api.uploadGoogleTranslate(transcription[0].alternatives[0].transcript);
+    if (translation) {
+      setTranslation(`${translation}`);
+      console.log(translation);
+    } else {
+      setTranslation("talk for at least 2 seconds");
+    }
+  } catch (error) {
+    setTranslation("Translating Error");
+    console.log(error)
+  }
 }
 
 export default {
