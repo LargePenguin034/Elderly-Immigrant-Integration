@@ -1,8 +1,5 @@
 import React from "react";
 import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView } from "react-native";
-import { Audio } from "expo-av";
-import * as FileSystem from "expo-file-system";
-import axios from "axios";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
 import audioUtils from '@/components/audioUtils.js'; // Assuming this file contains audio recording logic
