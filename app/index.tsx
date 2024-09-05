@@ -1,17 +1,21 @@
-import React from "react";
-import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView } from "react-native";
+import React, { useState } from "react";
+import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView, Alert } from "react-native";
 import { Audio } from "expo-av";
+import * as Speech from 'expo-speech';
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
-import audioUtils from '@/components/audioUtils.js'; // Assuming this file contains audio recording logic
+import audioUtils from '@/components/audioUtils.js';
+
 
 export default function App() {
   const [recording, setRecording] = React.useState();
   const [inputSpeech, setInputSpeech] = React.useState("");
   const [translation, setTranslation] = React.useState("");
   const [fontSize, setFontSize] = React.useState(18);
+  const [isSpeakingInput, setIsSpeakingInput] = React.useState(false);
+  const [isSpeakingTranslation, setIsSpeakingTranslation] = React.useState(false);
 
   const handlePress = () => {
     if (recording) {
@@ -28,6 +32,62 @@ export default function App() {
     });
   };
 
+  const speakText = async (text, isInput) => {
+    try {
+      // Stop any ongoing speech
+      await Speech.stop();
+      
+      if (isInput) {
+        setIsSpeakingInput(false);
+        setIsSpeakingTranslation(false);
+      } else {
+        setIsSpeakingTranslation(false);
+        setIsSpeakingInput(false);
+      }
+
+      if (text) {
+        if (isInput) {
+          setIsSpeakingInput(true);
+        } else {
+          setIsSpeakingTranslation(true);
+        }
+        
+        const options = {
+          language: isInput ? 'en-US' : 'zh-CN', // Use Chinese for translation
+          pitch: 1.0,
+          rate: 0.75,
+          volume: 1.0, // Slightly slower rate for better clarity
+          onDone: () => {
+            if (isInput) {
+              setIsSpeakingInput(false);
+            } else {
+              setIsSpeakingTranslation(false);
+            }
+          },
+          onError: (error) => {
+            console.error("Speech.speak error:", error);
+            if (isInput) {
+              setIsSpeakingInput(false);
+            } else {
+              setIsSpeakingTranslation(false);
+            }
+            Alert.alert("Error", "An error occurred while speaking the text");
+          },
+        };
+
+        await Speech.speak(text, options);
+      }
+    } catch (error) {
+      console.error("speakText error:", error);
+      if (isInput) {
+        setIsSpeakingInput(false);
+      } else {
+        setIsSpeakingTranslation(false);
+      }
+      Alert.alert("Error", "An unexpected error occurred while trying to speak.");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -41,7 +101,7 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* Input Text Area */}
+       {/* Input Text Area */}
       <View style={styles.translationContainer}>
         <View style={styles.textContainer}>
           <TextInput
@@ -52,8 +112,12 @@ export default function App() {
             placeholder="Enter text to translate"
             multiline
           />
-          <TouchableOpacity style={styles.speakerButton}>
-            <Ionicons name="volume-medium" size={24} color="gray" />
+          <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(inputSpeech, true)}>
+            <Ionicons 
+              name={isSpeakingInput ? "volume-high" : "volume-medium"} 
+              size={24} 
+              color={isSpeakingInput ? "#007bff" : "gray"} 
+            />
           </TouchableOpacity>
         </View>
 
@@ -78,8 +142,12 @@ export default function App() {
             editable={false}
             multiline
           />
-          <TouchableOpacity style={styles.speakerButton}>
-            <Ionicons name="volume-medium" size={24} color="gray" />
+          <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(translation, false)}>
+            <Ionicons 
+              name={isSpeakingTranslation ? "volume-high" : "volume-medium"} 
+              size={24} 
+              color={isSpeakingTranslation ? "#007bff" : "gray"} 
+            />
           </TouchableOpacity>
         </View>
       </View>
