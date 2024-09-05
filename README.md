@@ -26,4 +26,3 @@ You can start developing by editing the files inside the **app** directory. This
 if you are working on the ui go to app/index.tsx
 if you are working on api go to componets/apis.js
 if you are working on streaming audio go to components/audioUtils.js
-hello
