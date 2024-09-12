@@ -3,6 +3,7 @@ import axios from "axios";
 import { Audio } from "expo-av";
 import Api from "./apis";
 import { Platform } from 'react-native';
+import { IOSOutputFormat } from "expo-av/build/Audio";
 
 
 let ws;
@@ -18,8 +19,9 @@ const recordingOptions = {
     },
     ios: {
       extension: '.wav',
-      audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_MAX,
-      sampleRate: 16000,
+      outputFormat: Audio.IOSOutputFormat.ULAW,
+      audioQuality: Audio.IOSAudioQuality.MIN,
+      sampleRate: 8000,
       numberOfChannels: 1,
       bitRate: 128000,
       linearPCMBitDepth: 16,
@@ -47,7 +49,8 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation) {
         setInputSpeech("Listening...");
   
         // Connect to the WebSocket server
-        ws = new WebSocket("ws://192.168.1.103:8080");
+        //ws = new WebSocket("ws://192.168.1.103:8080");
+        ws = new WebSocket("ws://192.168.94.221:8080");
   
         ws.onopen = () => {
           console.log("WebSocket connected");

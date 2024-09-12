@@ -42,8 +42,8 @@ wss.on('connection', (ws) => {
       } else if (device === 'ios') {
         config = {
           config: {
-            encoding: 'LINEAR16',
-            sampleRateHertz: 16000,
+            encoding: 'MULAW',
+            sampleRateHertz: 8000,
             languageCode: 'en-US',
           },
           interimResults: true
