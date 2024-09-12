@@ -23,20 +23,36 @@ wss.on('connection', (ws) => {
   ws.on('message', async (message) => {
     const messageString = message.toString();
     console.log('Received message:', messageString);
-    const { type, data } = JSON.parse(messageString);
+    const { type, data, device } = JSON.parse(messageString);
 
     if (type === 'start') {
-      console.log('Starting new recognition stream');
-      // Start the streaming recognition request
-      recognizeStream = speechClient
-        .streamingRecognize({
+      //console.log('Starting new recognition stream for device:', device);
+
+      // Determine the configuration based on the device type
+      let config;
+      if (device === 'android') {
+        config = {
           config: {
             encoding: 'AMR_WB',
             sampleRateHertz: 16000,
             languageCode: 'en-US',
           },
-          interimResults: true, // Return interim results as the user speaks
-        })
+          interimResults: true
+        };
+      } else if (device === 'ios') {
+        config = {
+          config: {
+            encoding: 'LINEAR16',
+            sampleRateHertz: 16000,
+            languageCode: 'en-US',
+          },
+          interimResults: true
+        };
+      }
+
+      // Start the streaming recognition request
+      recognizeStream = speechClient
+        .streamingRecognize(config)
         .on('data', async (data) => {
           //console.log('Data received from Google Speech API', data);
           if (data.results[0] && data.results[0].alternatives[0]) {
@@ -61,13 +77,17 @@ wss.on('connection', (ws) => {
       console.log('Audio data received'); // Confirm audio data is received
       const audioData = Buffer.from(data, 'base64');
       console.log('Writing audio data to the stream', audioData.length + ' bytes');
-      recognizeStream.write(audioData);
+      if (recognizeStream) {
+        recognizeStream.write(audioData);
+      }
     }
 
     if (type === 'stop') {
       // Stop the stream when client ends it
       console.log('Stopping recognition stream');
-      recognizeStream.end();
+      if (recognizeStream) {
+        recognizeStream.end();
+      }
     }
   });
 

@@ -2,6 +2,8 @@ import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import { Audio } from "expo-av";
 import Api from "./apis";
+import { Platform } from 'react-native';
+
 
 let ws;
 
@@ -51,7 +53,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation) {
           console.log("WebSocket connected");
   
           // Start streaming audio to the server
-          ws.send(JSON.stringify({ type: "start" }));
+          ws.send(JSON.stringify({ type: "start", device: Platform.OS }));
           const intervalId = setInterval(async () => {
             const uri = recording.getURI();
             const fileData = await FileSystem.readAsStringAsync(uri, {
