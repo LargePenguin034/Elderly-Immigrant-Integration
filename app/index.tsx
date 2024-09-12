@@ -5,16 +5,20 @@ import { Ionicons } from '@expo/vector-icons';
 import audioUtils from '@/components/audioUtils.js'; // Assuming this file contains audio recording logic
 
 export default function App() {
-  const [recording, setRecording] = React.useState();
+  const [recording, setRecording] = React.useState<boolean | null>(null);
   const [inputSpeech, setInputSpeech] = React.useState("");
   const [translation, setTranslation] = React.useState("");
   const [fontSize, setFontSize] = React.useState(18);
 
   const handlePress = () => {
     if (recording) {
-      audioUtils.stopRecording(recording, setRecording, setInputSpeech, setTranslation);
+      console.log("Calling stopStreaming")
+      audioUtils.stopStreaming(recording);
+      setRecording(null);
     } else {
-      audioUtils.startRecording(setRecording, setInputSpeech);
+      console.log("Calling startStreaming")
+      audioUtils.startStreaming(setRecording, setInputSpeech, setTranslation);
+      setRecording(true); // Assume streaming is now active
     }
   };
 

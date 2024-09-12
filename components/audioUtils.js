@@ -2,72 +2,104 @@ import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import { Audio } from "expo-av";
 import Api from "./apis";
+import { Platform } from 'react-native';
 
-async function startRecording(setRecording, setInputSpeech) {
-  try {
-    const perm = await Audio.requestPermissionsAsync();
-    if (perm.status === "granted") {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-      );
-      setInputSpeech("Listening...");
-      setRecording(recording);
+
+let ws;
+
+const recordingOptions = {
+    android: {
+      extension: '.amr',
+      outputFormat: Audio.AndroidOutputFormat.AMR_WB,
+      audioEncoder: Audio.AndroidAudioEncoder.AMR_WB,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      bitRate: 128000,
+    },
+    ios: {
+      extension: '.wav',
+      audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_MAX,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      bitRate: 128000,
+      linearPCMBitDepth: 16,
+      linearPCMIsBigEndian: false,
+      linearPCMIsFloat: false,
+    },
+  };
+
+async function startStreaming(setRecording, setInputSpeech, setTranslation) {
+    try {
+      const perm = await Audio.requestPermissionsAsync();
+      if (perm.status === "granted") {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+  
+        const recording = new Audio.Recording();
+        await recording.prepareToRecordAsync(
+          recordingOptions
+        );
+        await recording.startAsync();
+        setRecording(recording);
+  
+        setInputSpeech("Listening...");
+  
+        // Connect to the WebSocket server
+        ws = new WebSocket("ws://192.168.1.103:8080");
+  
+        ws.onopen = () => {
+          console.log("WebSocket connected");
+  
+          // Start streaming audio to the server
+          ws.send(JSON.stringify({ type: "start", device: Platform.OS }));
+          const intervalId = setInterval(async () => {
+            const uri = recording.getURI();
+            const fileData = await FileSystem.readAsStringAsync(uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            console.log("Sending audio data")
+            ws.send(JSON.stringify({ type: "audio", data: fileData }));
+          }, 1000); // Stream audio every second
+        
+          // Stop recording and streaming after a certain time
+          setTimeout(() => {
+            clearInterval(intervalId);
+            stopStreaming(recording);
+          }, 10000); // Adjust timing as needed
+        };
+  
+        ws.onmessage = (event) => {
+          const { transcription, translation } = JSON.parse(event.data);
+          setInputSpeech(transcription);
+          setTranslation(translation);
+        };
+        
+        ws.onerror = (event) => {
+          console.error("WebSocket error observed:", event.message);
+        };
+          
+        ws.onclose = () => {
+          console.log("WebSocket closed");
+        };
+      }
+    } catch (err) {
+      console.log(err);
     }
-  } catch (err) {
-    console.log(err);
   }
-}
-
-async function stopRecording(
-  recording,
-  setRecording,
-  setInputSpeech,
-  setTranslation
-) {
-  setRecording(null);
-
-  await recording.stopAndUnloadAsync();
-  const { sound, status } = await recording.createNewLoadedSoundAsync();
-  const recordingURI = recording.getURI();
-
-  // Read the file from the local file system as a binary
-  const fileInfo = await FileSystem.getInfoAsync(recordingURI);
-  if (!fileInfo.exists) {
-    throw new Error("File does not exist");
-  }
-  const fileUri = fileInfo.uri;
-  let transcription;
-
-  try {
-    transcription = await Api.uploadAudioToGoogleSpeech(recordingURI);
-    if (transcription) {
-      setInputSpeech(`${transcription[0].alternatives[0].transcript}`);
-    } else {
-      setInputSpeech("talk for at least 2 seconds");
+  
+  async function stopStreaming(recording) {
+    if (recording) {
+      await recording.stopAndUnloadAsync();
     }
-  } catch (error) {
-    setInputSpeech("Error processing audio");
-  }
-
-  try {
-    const translation = await Api.uploadGoogleTranslate(transcription[0].alternatives[0].transcript);
-    if (translation) {
-      setTranslation(`${translation}`);
-      console.log(translation);
-    } else {
-      setTranslation("talk for at least 2 seconds");
+    if (ws) {
+      ws.send(JSON.stringify({ type: "stop" }));
+      ws.close();
     }
-  } catch (error) {
-    setTranslation("Translating Error");
-    console.log(error)
   }
-}
-
-export default {
-  stopRecording,
-  startRecording,
-};
+  
+  export default {
+    startStreaming,
+    stopStreaming,
+  };
