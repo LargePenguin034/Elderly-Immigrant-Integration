@@ -6,14 +6,14 @@ import { useTheme } from './_layout';
 
 export default function Settings() {
   const router = useRouter();
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState('Australian');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
 
   const toggleVoice = () => setVoiceEnabled(previousState => !previousState);
 
-  const languages = ['English', 'Spanish', 'French', 'German', 'Chinese'];
+  const languages = ['Australian', 'Chinese'];
 
   useEffect(() => {
     StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
@@ -30,7 +30,7 @@ export default function Settings() {
       </View>
       <View style={styles.content}>
         <TouchableOpacity style={styles.settingItem} onPress={() => setModalVisible(true)}>
-          <Text style={[styles.settingText, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Language</Text>
+          <Text style={[styles.settingText, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Accent</Text>
           <View style={styles.settingValue}>
             <Text style={[styles.valueText, { color: isDarkMode ? '#BBBBBB' : '#666666' }]}>{language}</Text>
             <Ionicons name="chevron-forward" size={24} color={isDarkMode ? "#BBBBBB" : "#999999"} />
@@ -65,7 +65,7 @@ export default function Settings() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={[styles.modalView, { backgroundColor: isDarkMode ? '#2C2C2C' : 'white' }]}>
-          <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Select Language</Text>
+          <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Select Accent</Text>
           {languages.map((lang) => (
             <TouchableOpacity
               key={lang}
