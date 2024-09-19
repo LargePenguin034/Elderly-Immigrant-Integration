@@ -1,7 +1,9 @@
+const contextTranslate = require('./context');  // Use instead of google translate for contexts
 const express = require('express');
 const WebSocket = require('ws');
 const speech = require('@google-cloud/speech');
 const { Translate } = require('@google-cloud/translate').v2;
+
 require('dotenv').config();
 
 const app = express();
