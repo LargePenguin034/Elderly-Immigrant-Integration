@@ -4,7 +4,10 @@ import { Audio } from "expo-av";
 import Api from "./apis";
 import { Platform } from 'react-native';
 import { IOSOutputFormat } from "expo-av/build/Audio";
+import Constants from 'expo-constants';
 
+
+const WEB_SOCKET = Constants.expoConfig.extra.WEB_SOCKET;
 
 let ws;
 
@@ -50,7 +53,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation) {
   
         // Connect to the WebSocket server
         //ws = new WebSocket("ws://192.168.1.103:8080");
-        ws = new WebSocket("ws://192.168.94.221:8080");
+        ws = new WebSocket(WEB_SOCKET);
   
         ws.onopen = () => {
           console.log("WebSocket connected");
