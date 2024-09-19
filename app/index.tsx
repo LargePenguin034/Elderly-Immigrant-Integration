@@ -2,20 +2,20 @@ import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView, Alert } from "react-native";
 import { Audio } from "expo-av";
 import * as Speech from 'expo-speech';
-import * as FileSystem from "expo-file-system";
-import axios from "axios";
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import audioUtils from '@/components/audioUtils.js';
+import { useTheme } from './_layout';
 
-
-export default function App() {
-  const [recording, setRecording] = React.useState();
-  const [inputSpeech, setInputSpeech] = React.useState("");
-  const [translation, setTranslation] = React.useState("");
-  const [fontSize, setFontSize] = React.useState(18);
-  const [isSpeakingInput, setIsSpeakingInput] = React.useState(false);
-  const [isSpeakingTranslation, setIsSpeakingTranslation] = React.useState(false);
+export default function HomeScreen() {
+  const [recording, setRecording] = useState();
+  const [inputSpeech, setInputSpeech] = useState("");
+  const [translation, setTranslation] = useState("");
+  const [fontSize, setFontSize] = useState(20);
+  const [isSpeakingInput, setIsSpeakingInput] = useState(false);
+  const [isSpeakingTranslation, setIsSpeakingTranslation] = useState(false);
+  const router = useRouter();
+  const { isDarkMode } = useTheme();
 
   const handlePress = () => {
     if (recording) {
@@ -28,50 +28,42 @@ export default function App() {
   const adjustFontSize = (change) => {
     setFontSize((prevSize) => {
       const newSize = prevSize + change;
-      return newSize >= 12 && newSize <= 32 ? newSize : prevSize;
+      return newSize >= 20 && newSize <= 50 ? newSize : prevSize;
     });
+  };
+
+  const setAudioMode = async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        staysActiveInBackground: false,
+      });
+    } catch (error) {
+      console.log("Error setting audio mode:", error);
+    }
   };
 
   const speakText = async (text, isInput) => {
     try {
-      // Stop any ongoing speech
       await Speech.stop();
-      
-      if (isInput) {
-        setIsSpeakingInput(false);
-        setIsSpeakingTranslation(false);
-      } else {
-        setIsSpeakingTranslation(false);
-        setIsSpeakingInput(false);
-      }
+      await setAudioMode();
 
       if (text) {
-        if (isInput) {
-          setIsSpeakingInput(true);
-        } else {
-          setIsSpeakingTranslation(true);
-        }
-        
         const options = {
-          language: isInput ? 'en-US' : 'zh-CN', // Use Chinese for translation
+          language: isInput ? 'en-US' : 'zh-CN',
           pitch: 1.0,
           rate: 0.75,
-          volume: 1.0, // Slightly slower rate for better clarity
+          volume: 1.0,
           onDone: () => {
-            if (isInput) {
-              setIsSpeakingInput(false);
-            } else {
-              setIsSpeakingTranslation(false);
-            }
+            if (isInput) setIsSpeakingInput(false);
+            else setIsSpeakingTranslation(false);
           },
           onError: (error) => {
             console.error("Speech.speak error:", error);
-            if (isInput) {
-              setIsSpeakingInput(false);
-            } else {
-              setIsSpeakingTranslation(false);
-            }
             Alert.alert("Error", "An error occurred while speaking the text");
+            setIsSpeakingInput(false);
+            setIsSpeakingTranslation(false);
           },
         };
 
@@ -79,57 +71,53 @@ export default function App() {
       }
     } catch (error) {
       console.error("speakText error:", error);
-      if (isInput) {
-        setIsSpeakingInput(false);
-      } else {
-        setIsSpeakingTranslation(false);
-      }
       Alert.alert("Error", "An unexpected error occurred while trying to speak.");
+      setIsSpeakingInput(false);
+      setIsSpeakingTranslation(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="settings-outline" size={24} color="white" />
+    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" }]}>
+      <View style={[styles.header, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.push('settings')}>
+          <Ionicons name="settings-outline" size={24} color={isDarkMode ? "white" : "black"} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Translatify</Text>
+        <Text style={[styles.headerTitle, { color: isDarkMode ? 'white' : 'black' }]}>Translatify</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="help-circle-outline" size={24} color="white" />
+          <Ionicons name="help-circle-outline" size={24} color={isDarkMode ? "white" : "black"} />
         </TouchableOpacity>
       </View>
 
-       {/* Input Text Area */}
       <View style={styles.translationContainer}>
-        <View style={styles.textContainer}>
+        <View style={[styles.textContainer, { backgroundColor: isDarkMode ? '#333' : 'white' }]}>
           <TextInput
-            style={[styles.textArea, { fontSize }]}
+            style={[styles.textArea, { fontSize, color: isDarkMode ? 'white' : 'black' }]}
             value={inputSpeech}
             editable={false}
-            onChangeText={(newinputSpeech) => setInputSpeech(newinputSpeech)}
+            onChangeText={setInputSpeech}
             placeholder="Enter text to translate"
+            placeholderTextColor={isDarkMode ? '#999' : '#666'}
             multiline
           />
           <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(inputSpeech, true)}>
-            <Ionicons 
-              name={isSpeakingInput ? "volume-high" : "volume-medium"} 
-              size={24} 
-              color={isSpeakingInput ? "#007bff" : "gray"} 
+            <Ionicons
+              name={isSpeakingInput ? "volume-high" : "volume-medium"}
+              size={24}
+              color={isSpeakingInput ? "#007bff" : isDarkMode ? "white" : "gray"}
             />
           </TouchableOpacity>
         </View>
 
         {/* Font Size Controls */}
         <View style={styles.controls}>
-          <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(-2)}>
+          <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(-3)}>
             <Ionicons name="remove" size={24} color="white" />
           </TouchableOpacity>
           <View style={styles.fontSizeDisplay}>
             <Text style={styles.fontSizeText}>{fontSize}</Text>
           </View>
-          <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(2)}>
+          <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(3)}>
             <Ionicons name="add" size={24} color="white" />
           </TouchableOpacity>
         </View>
@@ -143,10 +131,10 @@ export default function App() {
             multiline
           />
           <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(translation, false)}>
-            <Ionicons 
-              name={isSpeakingTranslation ? "volume-high" : "volume-medium"} 
-              size={24} 
-              color={isSpeakingTranslation ? "#007bff" : "gray"} 
+            <Ionicons
+              name={isSpeakingTranslation ? "volume-high" : "volume-medium"}
+              size={24}
+              color={isSpeakingTranslation ? "#007bff" : "gray"}
             />
           </TouchableOpacity>
         </View>
@@ -155,7 +143,7 @@ export default function App() {
       {/* Microphone Button */}
       <TouchableOpacity style={styles.button} onPress={handlePress}>
         {recording ? (
-          <Icon name="stop" size={30} color="#fff" />
+          <Ionicons name="stop" size={30} color="#fff" />
         ) : (
           <Ionicons name="mic-outline" size={30} color="white" />
         )}
