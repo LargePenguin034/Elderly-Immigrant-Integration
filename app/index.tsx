@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView, Alert } from "react-native";
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Audio } from "expo-av";
 import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import audioUtils from '@/components/audioUtils.js';
 import { useTheme } from './_layout';
+
 
 export default function HomeScreen() {
   const [recording, setRecording] = useState();
@@ -19,9 +21,13 @@ export default function HomeScreen() {
 
   const handlePress = () => {
     if (recording) {
-      audioUtils.stopRecording(recording, setRecording, setInputSpeech, setTranslation);
+      console.log("Calling stopStreaming")
+      audioUtils.stopStreaming(recording);
+      setRecording(null);
     } else {
-      audioUtils.startRecording(setRecording, setInputSpeech);
+      console.log("Calling startStreaming")
+      audioUtils.startStreaming(setRecording, setInputSpeech, setTranslation);
+      setRecording(true); // Assume streaming is now active
     }
   };
 

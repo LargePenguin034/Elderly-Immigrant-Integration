@@ -1,6 +1,4 @@
-# Welcome to your Expo app 👋
-
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# Welcome to Traslify
 
 ## Get started
 
@@ -10,25 +8,39 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Create .env in the backend folder with the following 
+   ```bash
+   GOOGLE_APPLICATION_CREDENTIALS=nimble-answer-434823-u3-2c626702566e.json
+   OPEN_API_KEY = "your open api key"
+   ```
+
+3. edit app.json
+   ```bash
+    go to extra change WEB_SOCKET to "ws://Your IPV4 Address:8080"
+   ```
+
+4. Start The server
+   ```bash
+    node backend/server
+   ```
+
+5. Start the app
 
    ```bash
     npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Important Files
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+UI
+app/index.tsx
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Audio Handling
+components/audioUtils.js
 
-## Get started
+Context
+backend/context.js
 
-if you are working on the ui go to app/index.tsx
+Real Time Translation
+backend/server.js
 
-if you are working on api go to componets/apis.js
-
-if you are working on streaming audio go to components/audioUtils.js
