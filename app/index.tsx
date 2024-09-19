@@ -1,5 +1,17 @@
 import React, { useState } from "react";
-import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView, Alert } from "react-native";
+import {
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Text,
+  View,
+  SafeAreaView,
+  Alert,
+  Platform,
+  ScrollView,
+  Modal,
+  Animated,
+} from "react-native";
 import { Audio } from "expo-av";
 import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +26,8 @@ export default function HomeScreen() {
   const [fontSize, setFontSize] = useState(20);
   const [isSpeakingInput, setIsSpeakingInput] = useState(false);
   const [isSpeakingTranslation, setIsSpeakingTranslation] = useState(false);
+  const [isTutorialVisible, setIsTutorialVisible] = useState(false); // Modal visibility state
+  const [scaleValue] = useState(new Animated.Value(0)); // Animation state for modal scale
   const router = useRouter();
   const { isDarkMode } = useTheme();
 
@@ -34,13 +48,22 @@ export default function HomeScreen() {
 
   const setAudioMode = async () => {
     try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        staysActiveInBackground: false,
-      });
+      if (Platform.OS === 'ios') {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+        });
+      } else {
+        await Audio.setAudioModeAsync({
+          shouldDuckAndroid: true,
+          staysActiveInBackground: true,
+          interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+          playThroughEarpieceAndroid: false
+        });
+      }
+      console.log("Audio mode set successfully");
     } catch (error) {
-      console.log("Error setting audio mode:", error);
+      console.error("Error setting audio mode:", error);
     }
   };
 
@@ -55,26 +78,42 @@ export default function HomeScreen() {
           pitch: 1.0,
           rate: 0.75,
           volume: 1.0,
-          onDone: () => {
-            if (isInput) setIsSpeakingInput(false);
-            else setIsSpeakingTranslation(false);
-          },
-          onError: (error) => {
-            console.error("Speech.speak error:", error);
-            Alert.alert("Error", "An error occurred while speaking the text");
-            setIsSpeakingInput(false);
-            setIsSpeakingTranslation(false);
-          },
         };
+
+        if (Platform.OS === 'ios') {
+          options.voice = 'com.apple.ttsbundle.Ting-Ting-compact';
+        }
+
+        console.log("Speaking text:", text);
+        console.log("Speech options:", options);
 
         await Speech.speak(text, options);
       }
     } catch (error) {
       console.error("speakText error:", error);
       Alert.alert("Error", "An unexpected error occurred while trying to speak.");
-      setIsSpeakingInput(false);
-      setIsSpeakingTranslation(false);
+    } finally {
+      if (isInput) setIsSpeakingInput(false);
+      else setIsSpeakingTranslation(false);
     }
+  };
+
+  // Modal animation (scale effect)
+  const showTutorial = () => {
+    setIsTutorialVisible(true);
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const hideTutorial = () => {
+    Animated.timing(scaleValue, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setIsTutorialVisible(false));
   };
 
   return (
@@ -84,13 +123,52 @@ export default function HomeScreen() {
           <Ionicons name="settings-outline" size={24} color={isDarkMode ? "white" : "black"} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: isDarkMode ? 'white' : 'black' }]}>Translatify</Text>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={showTutorial}>
           <Ionicons name="help-circle-outline" size={24} color={isDarkMode ? "white" : "black"} />
         </TouchableOpacity>
       </View>
 
+      {/* Modal for Tutorial */}
+      <Modal
+        transparent={true}
+        visible={isTutorialVisible}
+        animationType="fade"
+        onRequestClose={hideTutorial}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={hideTutorial}>
+          <TouchableOpacity activeOpacity={1} style={styles.centeredView}>
+            <Animated.View style={[styles.modalContent, { transform: [{ scale: scaleValue }] }]}>
+              <Text style={styles.modalTitle}>App Tutorial</Text>
+              <ScrollView>
+                <Text style={styles.tutorialText}>
+                  1. To start recording, press the microphone button. The app will record your speech.
+                </Text>
+                <Text style={styles.tutorialText}>
+                  2. After recording, the app will transcribe your speech into text and display it.
+                </Text>
+                <Text style={styles.tutorialText}>
+                  3. You can adjust the font size of the text using the + and - buttons.
+                </Text>
+                <Text style={styles.tutorialText}>
+                  4. To hear the input speech or translated text, press the speaker icons next to the text.
+                </Text>
+                <Text style={styles.tutorialText}>
+                  5. You can change app settings from the settings icon on the top left corner.
+                </Text>
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={hideTutorial}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       <View style={styles.translationContainer}>
-      <View style={[styles.textContainer, { backgroundColor: isDarkMode ? 'white' : 'white' }]}>
+        <View style={[styles.textContainer, { backgroundColor: isDarkMode ? 'white' : 'white' }]}>
           <TextInput
             style={[styles.textArea, { fontSize, color: isDarkMode ? 'black' : 'black' }]}
             value={inputSpeech}
@@ -109,8 +187,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-
-        {/* Font Size Controls */}
         <View style={styles.controls}>
           <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(-3)}>
             <Ionicons name="remove" size={24} color="white" />
@@ -123,7 +199,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Output Text Area */}
         <View style={styles.textContainer}>
           <TextInput
             style={[styles.textArea, { fontSize }]}
@@ -141,7 +216,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Microphone Button */}
       <TouchableOpacity style={styles.button} onPress={handlePress}>
         {recording ? (
           <Ionicons name="stop" size={30} color="#fff" />
@@ -227,5 +301,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
     marginHorizontal: 20,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  centeredView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '80%',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '100%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  tutorialText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
