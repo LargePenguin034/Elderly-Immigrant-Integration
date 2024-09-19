@@ -90,24 +90,25 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.translationContainer}>
-        <View style={[styles.textContainer, { backgroundColor: isDarkMode ? '#333' : 'white' }]}>
+      <View style={[styles.textContainer, { backgroundColor: isDarkMode ? 'white' : 'white' }]}>
           <TextInput
-            style={[styles.textArea, { fontSize, color: isDarkMode ? 'white' : 'black' }]}
+            style={[styles.textArea, { fontSize, color: isDarkMode ? 'black' : 'black' }]}
             value={inputSpeech}
             editable={false}
             onChangeText={setInputSpeech}
             placeholder="Enter text to translate"
-            placeholderTextColor={isDarkMode ? '#999' : '#666'}
+            placeholderTextColor={isDarkMode ? '#666' : '#666'}
             multiline
           />
           <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(inputSpeech, true)}>
             <Ionicons
               name={isSpeakingInput ? "volume-high" : "volume-medium"}
               size={24}
-              color={isSpeakingInput ? "#007bff" : isDarkMode ? "white" : "gray"}
+              color={isSpeakingInput ? "#007bff" : isDarkMode ? "black" : "gray"}
             />
           </TouchableOpacity>
         </View>
+
 
         {/* Font Size Controls */}
         <View style={styles.controls}>
