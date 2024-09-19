@@ -1,9 +1,10 @@
 const OpenAi = require('openai');
+require('dotenv').config();
 
-const API_KEY = "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"
+const OPENAI_API_KEY = process.env.API_KEY;
 
 const client = new OpenAi({
-    apiKey: API_KEY
+    apiKey: OPENAI_API_KEY
 });
 
 async function contextTranslate(text) {
