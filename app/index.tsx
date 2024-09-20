@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import audioUtils from '@/components/audioUtils.js';
 import { useTheme } from './_layout';
 
+
 export default function HomeScreen() {
   const [recording, setRecording] = useState();
   const [inputSpeech, setInputSpeech] = useState("");
@@ -33,9 +34,13 @@ export default function HomeScreen() {
 
   const handlePress = () => {
     if (recording) {
-      audioUtils.stopRecording(recording, setRecording, setInputSpeech, setTranslation);
+      console.log("Calling stopStreaming")
+      audioUtils.stopStreaming(recording);
+      setRecording(null);
     } else {
-      audioUtils.startRecording(setRecording, setInputSpeech);
+      console.log("Calling startStreaming")
+      audioUtils.startStreaming(setRecording, setInputSpeech, setTranslation);
+      setRecording(true); // Assume streaming is now active
     }
   };
 
@@ -210,7 +215,7 @@ export default function HomeScreen() {
             <Ionicons
               name={isSpeakingTranslation ? "volume-high" : "volume-medium"}
               size={24}
-              color={isSpeakingTranslation ? "#007bff" : "gray"}
+              color={isSpeakingTranslation ? "#007bff" : "black"}
             />
           </TouchableOpacity>
         </View>

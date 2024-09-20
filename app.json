@@ -32,6 +32,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra" : {
+      "WEB_SOCKET" : "ws://10.89.231.37:8080"
     }
   }
 }
