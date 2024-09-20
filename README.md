@@ -32,15 +32,18 @@
 
 ## Important Files
 
-UI
+UI  
 app/index.tsx
 
-Audio Handling
-components/audioUtils.js
+Audio Handling  
+components/audioUtils.js  
+Starting and Stopping Stream the webserver  
 
-Context
-backend/context.js
+Context  
+backend/context.js  
+Api containing OPAPI Calls
 
-Real Time Translation
-backend/server.js
+Real Time Translation  
+backend/server.js  
+Hosting the server so that it streams data to the api  
 
