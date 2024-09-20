@@ -1,4 +1,4 @@
-# Welcome to Traslify
+# Welcome to Translatify
 
 ## Get started
 
