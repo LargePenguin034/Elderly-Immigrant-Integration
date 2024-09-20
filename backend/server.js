@@ -57,7 +57,7 @@ wss.on('connection', (ws) => {
         .streamingRecognize(config)
         .on('data', async (data) => {
           //console.log('Data received from Google Speech API', data);
-          if (data.results[0] && data.results[0].alternatives[0]) {
+          if (data.results[0] && data.results[0].isFinal && data.results[0].alternatives[0]) {
             const transcription = data.results[0].alternatives[0].transcript;
             console.log('Transcription:', transcription);
 
@@ -85,11 +85,12 @@ wss.on('connection', (ws) => {
     }
 
     if (type === 'stop') {
-      // Stop the stream when client ends it
-      console.log('Stopping recognition stream');
+      // Stop the stream when client ends it and close the connection
+      console.log('Stopping recognition stream and closing connection');
       if (recognizeStream) {
         recognizeStream.end();
       }
+      ws.close(); // Close the WebSocket connection
     }
   });
 

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, TextInput, Text, View, SafeAreaView, Alert } from "react-native";
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Audio } from "expo-av";
 import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
