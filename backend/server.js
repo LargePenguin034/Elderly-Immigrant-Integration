@@ -61,9 +61,12 @@ wss.on('connection', (ws) => {
             const transcription = data.results[0].alternatives[0].transcript;
             console.log('Transcription:', transcription);
 
-            // Translate the transcription
-            const [translation] = await translate.translate(transcription, 'zh-CN');
-            console.log('Translation:', translation);
+            // Translate the transcription (google translate)
+            //const [translation] = await translate.translate(transcription, 'zh-CN');
+
+            // OPENAI context translation
+            const translation = await contextTranslate(transcription) 
+            console.log('Contexted Translation:', translation);
 
             // Send transcription and translation back to the client
             ws.send(JSON.stringify({ transcription, translation }));
