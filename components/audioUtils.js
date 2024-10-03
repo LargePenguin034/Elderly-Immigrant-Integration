@@ -106,6 +106,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation) {
 
           // Handle WebSocket close event
           ws.onclose = () => {
+              setRecording(false)
               console.log("WebSocket closed");
           };
       }
@@ -123,6 +124,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation) {
  *    and then closes the WebSocket connection.
  */
   async function stopStreaming(recording) {
+
     if (recording) {
       await recording.stopAndUnloadAsync();
     }
