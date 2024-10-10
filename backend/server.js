@@ -62,10 +62,10 @@ wss.on('connection', (ws) => {
             console.log('Transcription:', transcription);
 
             // Translate the transcription (google translate)
-            //const [translation] = await translate.translate(transcription, 'zh-CN');
+            const [translation] = await translate.translate(transcription, 'zh-CN');
 
             // OPENAI context translation
-            const translation = await contextTranslate(transcription) 
+            //const translation = await contextTranslate(transcription) 
             console.log('Contexted Translation:', translation);
 
             // Send transcription and translation back to the client

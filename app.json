@@ -34,7 +34,7 @@
       "typedRoutes": true
     },
     "extra" : {
-      "WEB_SOCKET" : "ws://192.168.0.6:8080"
+      "WEB_SOCKET" : "ws://10.89.137.18:8080"
     }
   }
 }
