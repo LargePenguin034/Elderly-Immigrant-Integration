@@ -78,6 +78,10 @@ export default function HomeScreen() {
           console.log("Received input:", text);
           setInputSpeech(text);
         },
+        (translatedText) => {
+            console.log("Received translation:", translatedText);
+            setTranslation(translatedText);
+        },
         language
       );
       setRecording(true);
