@@ -25,10 +25,11 @@ wss.on('connection', (ws) => {
   ws.on('message', async (message) => {
     const messageString = message.toString();
     console.log('Received message:', messageString);
-    const { type, data, device } = JSON.parse(messageString);
+    const { type, data, device, language } = JSON.parse(messageString);
 
     if (type === 'start') {
       //console.log('Starting new recognition stream for device:', device);
+      const languageCode = language === 'zh' ? 'zh-CN' : 'en-US';
 
       // Determine the configuration based on the device type
       let config;
@@ -37,7 +38,7 @@ wss.on('connection', (ws) => {
           config: {
             encoding: 'AMR_WB',
             sampleRateHertz: 16000,
-            languageCode: 'en-US',
+            languageCode: languageCode,
           },
           interimResults: true
         };
@@ -46,7 +47,7 @@ wss.on('connection', (ws) => {
           config: {
             encoding: 'MULAW',
             sampleRateHertz: 8000,
-            languageCode: 'en-US',
+            languageCode: languageCode,
           },
           interimResults: true
         };
@@ -61,8 +62,11 @@ wss.on('connection', (ws) => {
             const transcription = data.results[0].alternatives[0].transcript;
             console.log('Transcription:', transcription);
 
+            // Determine target language for translation
+            const targetLanguage = language === 'zh' ? 'en' : 'zh-CN';
+
             // Translate the transcription (google translate)
-            const [translation] = await translate.translate(transcription, 'zh-CN');
+            const [translation] = await translate.translate(transcription, targetLanguage);
 
             // OPENAI context translation
             //const translation = await contextTranslate(transcription) 

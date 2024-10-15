@@ -47,7 +47,7 @@ const recordingOptions = {
  * 8. Listens for incoming messages from the server to update the UI with transcriptions and translations.
  * 9. Handles WebSocket errors and connection status changes.
  */
-async function startStreaming(setRecording, setInputSpeech, setTranslation) {
+async function startStreaming(setRecording, setInputSpeech, setTranslation, language) {
   try {
       // Request microphone permissions
       const perm = await Audio.requestPermissionsAsync();
@@ -72,8 +72,8 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation) {
           ws.onopen = () => {
               console.log("WebSocket connected");
 
-              // Start streaming audio to the server
-              ws.send(JSON.stringify({ type: "start", device: Platform.OS }));
+              // Start streaming audio to the server, also send the language
+              ws.send(JSON.stringify({ type: "start", device: Platform.OS, language }));
               
               // Set up a recurring interval to send audio data
               const intervalId = setInterval(async () => {
