@@ -1,35 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Modal, Switch, Animated, Easing, ScrollView, Alert, TouchableWithoutFeedback } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  StatusBar, 
+  Modal, 
+  Switch, 
+  Animated, 
+  Easing, 
+  ScrollView, 
+  Alert, 
+  TouchableWithoutFeedback,
+  TextInput
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useTheme } from './_layout';
+import { useAppContext } from './_layout';  // Update this line
 import emailjs from 'emailjs-com';
 
 // Add version and developer info
 const APP_VERSION = "1.0.0";
-const DEVELOPER_INFO = "Developed by YourCompany";
+const DEVELOPER_INFO = "Developed by Team Blue";
 
 export default function Settings() {
   const router = useRouter();
-  const [language, setLanguage] = useState('English');
-  const [fontSize, setFontSize] = useState(20);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState('');
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme, fontSize, setFontSize } = useAppContext();
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [modalAnimation] = useState(new Animated.Value(0));
 
-  const languages = ['Auto', 'English', 'Chinese'];
   const fontSizes = Array.from({ length: 16 }, (_, i) => 20 + i * 2);
 
   useEffect(() => {
     StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
   }, [isDarkMode]);
 
-  const openModal = (type) => {
-    setModalType(type);
+  const openFontSizeModal = () => {
     setModalVisible(true);
     Animated.timing(modalAnimation, {
       toValue: 1,
@@ -50,33 +60,9 @@ export default function Settings() {
     });
   };
 
-  const renderModalContent = () => {
-    const options = modalType === 'language' ? languages : fontSizes;
-    const currentValue = modalType === 'language' ? language : fontSize;
-    const setFunction = modalType === 'language' ? setLanguage : setFontSize;
-
-    return (
-      <ScrollView style={styles.modalScrollView}>
-        <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>
-          {modalType === 'language' ? 'Select Language' : 'Select Font Size'}
-        </Text>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option}
-            style={styles.optionItem}
-            onPress={() => {
-              setFunction(option);
-              closeModal();
-            }}
-          >
-            <Text style={[styles.optionText, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>
-              {modalType === 'language' ? option : `${option}px`}
-            </Text>
-            {currentValue === option && <Ionicons name="checkmark" size={24} color={isDarkMode ? "#4DA6FF" : "#007AFF"} />}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    );
+  const handleFontSizeChange = (newSize) => {
+    setFontSize(newSize);
+    closeModal();
   };
 
   const handleRating = (star) => {
@@ -95,12 +81,13 @@ export default function Settings() {
       templateParams,
       'I99mbwPvzOlP8StAp'
     ).then((response) => {
-      alert('Feedback sent successfully!');
+      Alert.alert('Success', 'Feedback sent successfully!');
       setFeedbackModalVisible(false);
       setRating(0);
       setReview('');
     }, (err) => {
       console.error('Failed to send feedback. Error:', err);
+      Alert.alert('Error', 'Failed to send feedback. Please try again later.');
     });
   };
 
@@ -115,15 +102,6 @@ export default function Settings() {
         />
       </TouchableOpacity>
     ));
-  };
-
-  const modalTranslateY = modalAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [300, 0],
-  });
-
-  const closeModalOnOutsideTouch = () => {
-    setFeedbackModalVisible(false);
   };
 
   const showAboutAlert = () => {
@@ -144,15 +122,7 @@ export default function Settings() {
         </TouchableOpacity>
       </View>
       <View style={styles.content}>
-        <TouchableOpacity style={styles.settingItem} onPress={() => openModal('language')}>
-          <Text style={[styles.settingText, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Language</Text>
-          <View style={styles.settingValue}>
-            <Text style={[styles.valueText, { color: isDarkMode ? '#BBBBBB' : '#666666' }]}>{language}</Text>
-            <Ionicons name="chevron-forward" size={24} color={isDarkMode ? "#BBBBBB" : "#999999"} />
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem} onPress={() => openModal('fontSize')}>
+        <TouchableOpacity style={styles.settingItem} onPress={openFontSizeModal}>
           <Text style={[styles.settingText, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Font Size</Text>
           <View style={styles.settingValue}>
             <Text style={[styles.valueText, { color: isDarkMode ? '#BBBBBB' : '#666666' }]}>{fontSize}px</Text>
@@ -182,27 +152,47 @@ export default function Settings() {
         </TouchableOpacity>
       </View>
 
-      {/* Language and Font Size Modal */}
+      {/* Font Size Modal */}
       <Modal
-        animationType="slide"
+        animationType="none"
         transparent={true}
         visible={modalVisible}
         onRequestClose={closeModal}
       >
-        <Animated.View 
-          style={[
-            styles.modalView, 
-            { 
-              backgroundColor: isDarkMode ? '#2C2C2C' : 'white',
-              transform: [{ translateY: modalTranslateY }]
-            }
-          ]}
-        >
-          {renderModalContent()}
-          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-            <Text style={[styles.closeButtonText, { color: isDarkMode ? "#4DA6FF" : "#007AFF" }]}>Close</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        <TouchableWithoutFeedback onPress={closeModal}>
+          <View style={styles.modalOverlay}>
+            <Animated.View 
+              style={[
+                styles.modalView, 
+                { 
+                  backgroundColor: isDarkMode ? '#2C2C2C' : 'white',
+                  transform: [{ translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [300, 0],
+                  }) }]
+                }
+              ]}
+            >
+              <ScrollView style={styles.modalScrollView}>
+                <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>
+                  Select Font Size
+                </Text>
+                {fontSizes.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={styles.optionItem}
+                    onPress={() => handleFontSizeChange(option)}
+                  >
+                    <Text style={[styles.optionText, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>
+                      {`${option}px`}
+                    </Text>
+                    {fontSize === option && <Ionicons name="checkmark" size={24} color={isDarkMode ? "#4DA6FF" : "#007AFF"} />}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Feedback Modal */}
@@ -212,16 +202,14 @@ export default function Settings() {
         onRequestClose={() => setFeedbackModalVisible(false)}
         animationType="fade"
       >
-        <TouchableWithoutFeedback onPress={closeModalOnOutsideTouch}>
+        <TouchableWithoutFeedback onPress={() => setFeedbackModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={[styles.feedbackModalView, { backgroundColor: isDarkMode ? '#2C2C2C' : 'white' }]}>
                 <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Rate Your Experience</Text>
-
                 <View style={styles.starContainer}>
                   {renderStars()}
                 </View>
-
                 <TextInput
                   style={[styles.input, { 
                     backgroundColor: isDarkMode ? '#1E1E1E' : '#F5F5F5',
@@ -234,7 +222,6 @@ export default function Settings() {
                   onChangeText={setReview}
                   multiline={true}
                 />
-
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity 
                     style={[styles.modalButton, { backgroundColor: isDarkMode ? '#4DA6FF' : '#007AFF' }]} 
@@ -302,11 +289,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 10,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
   modalView: {
-    margin: 20,
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 35,
-    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -315,48 +306,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    maxHeight: '80%',
+  },
+  modalScrollView: {
+    maxHeight: 300,
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
   },
   optionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-    padding: 15,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
   optionText: {
     fontSize: 18,
   },
-  closeButton: {
-    borderRadius: 20,
-    padding: 12,
-    paddingHorizontal: 24,
-    elevation: 2,
-    marginTop: 20,
-  },
-  closeButtonText: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
   feedbackModalView: {
-    width: '85%',
+    margin: 20,
+    backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -384,7 +358,6 @@ const styles = StyleSheet.create({
     padding: 15,
     width: '100%',
     textAlignVertical: 'top',
-    fontSize: 16,
     marginBottom: 20,
   },
   buttonContainer: {
@@ -402,8 +375,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  },
-  modalScrollView: {
-    maxHeight: 300,
   },
 });

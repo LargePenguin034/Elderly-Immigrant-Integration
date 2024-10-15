@@ -45,25 +45,46 @@ const styles = StyleSheet.create({
       right: 10,
     },
     controls: {
-      flexDirection: 'row',
-      justifyContent: 'center',
       alignItems: 'center',
+      justifyContent: 'center',
       marginBottom: 20,
     },
-    controlButton: {
-      backgroundColor: '#007bff',
-      padding: 10,
-      borderRadius: 20,
-      marginHorizontal: 10,
+    languageSwitcherContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    fontSizeDisplay: {
-      backgroundColor: 'white',
-      padding: 10,
-      borderRadius: 20,
-      marginHorizontal: 10,
+    languageToggle: {
+      backgroundColor: '#F0F0F0',
+      borderRadius: 28,
+      padding: 4,
+      flexDirection: 'row',
+      width: 250,
+      height: 56,
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
-    fontSizeText: {
-      fontSize: 18,
+    languageButton: {
+      borderRadius: 24,
+      width: 96,
+      height: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    languageButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    arrowContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      zIndex: -1,
+    },
+    arrow: {
+      fontSize: 20,
       fontWeight: 'bold',
     },
     button: {
@@ -75,44 +96,43 @@ const styles = StyleSheet.create({
       marginBottom: 20,
       marginHorizontal: 20,
     },
-    // Modal styles
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    centeredView: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '80%',
-    },
-    modalContent: {
-      backgroundColor: 'white',
-      borderRadius: 10,
-      padding: 20,
-      width: '100%',
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: 10,
-    },
-    tutorialText: {
-      fontSize: 16,
-      marginBottom: 10,
-    },
-    closeButton: {
-      backgroundColor: '#007bff',
-      padding: 10,
-      borderRadius: 5,
-      marginTop: 20,
-      alignItems: 'center',
-    },
-    closeButtonText: {
-      color: 'white',
-      fontSize: 16,
-    },
-  });
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  centeredView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '80%',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '100%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  tutorialText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+});
 
 export default styles;

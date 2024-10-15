@@ -17,43 +17,71 @@ import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import audioUtils from '@/components/audioUtils.js';
-import { useTheme } from './_layout';
+import { useAppContext } from './_layout';  // Update this line
+import SplashScreen from './SplashScreen';
 import styles from './styles';
-
 
 export default function HomeScreen() {
   const [recording, setRecording] = useState();
   const [inputSpeech, setInputSpeech] = useState("");
   const [translation, setTranslation] = useState("");
-  const [fontSize, setFontSize] = useState(20);
+  const [language, setLanguage] = useState("en");
   const [isSpeakingInput, setIsSpeakingInput] = useState(false);
   const [isSpeakingTranslation, setIsSpeakingTranslation] = useState(false);
-  const [isTutorialVisible, setIsTutorialVisible] = useState(false); // Modal visibility state
-  const [scaleValue] = useState(new Animated.Value(0)); // Animation state for modal scale
+  const [isTutorialVisible, setIsTutorialVisible] = useState(false);
+  const [scaleValue] = useState(new Animated.Value(0));
+  const [isLoading, setIsLoading] = useState(true);
+  const [arrowDirection, setArrowDirection] = useState("→");
   const router = useRouter();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, fontSize } = useAppContext();
+
+  const getPlaceholderText = () => {
+    return language === "en" 
+      ? { input: "Hello", output: "你好" }
+      : { input: "你好", output: "Hello" };
+  };
 
   useEffect(() => {
     StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
   }, [isDarkMode]);
 
+  useEffect(() => {
+    const translateText = async () => {
+      if (inputSpeech) {
+        console.log("Translating:", inputSpeech);
+        const translatedText = await audioUtils.translateText(inputSpeech, language);
+        console.log("Translation result:", translatedText);
+        setTranslation(translatedText);
+      }
+    };
+
+    translateText();
+  }, [inputSpeech, language]);
+
+  const toggleLanguage = () => {
+    setLanguage(prevLang => prevLang === "en" ? "zh" : "en");
+    setArrowDirection(prevArrow => prevArrow === "→" ? "←" : "→");
+    setInputSpeech("");
+    setTranslation("");
+  };
+
   const handlePress = () => {
     if (recording) {
-      console.log("Calling stopStreaming")
+      console.log("Calling stopStreaming");
       audioUtils.stopStreaming(recording);
       setRecording(null);
     } else {
-      console.log("Calling startStreaming")
-      audioUtils.startStreaming(setRecording, setInputSpeech, setTranslation);
-      setRecording(true); // Assume streaming is now active
+      console.log("Calling startStreaming");
+      audioUtils.startStreaming(
+        setRecording,
+        (text) => {
+          console.log("Received input:", text);
+          setInputSpeech(text);
+        },
+        language
+      );
+      setRecording(true);
     }
-  };
-
-  const adjustFontSize = (change) => {
-    setFontSize((prevSize) => {
-      const newSize = prevSize + change;
-      return newSize >= 20 && newSize <= 50 ? newSize : prevSize;
-    });
   };
 
   const setAudioMode = async () => {
@@ -84,18 +112,15 @@ export default function HomeScreen() {
 
       if (text) {
         const options = {
-          language: isInput ? 'en-US' : 'zh-CN',
+          language: isInput ? (language === "en" ? 'en-US' : 'zh-CN') : (language === "en" ? 'zh-CN' : 'en-US'),
           pitch: 1.0,
           rate: 0.75,
           volume: 1.0,
         };
 
         if (Platform.OS === 'ios') {
-          options.voice = 'com.apple.ttsbundle.Ting-Ting-compact';
+          options.voice = language === "en" ? 'com.apple.ttsbundle.Samantha-compact' : 'com.apple.ttsbundle.Ting-Ting-compact';
         }
-
-        console.log("Speaking text:", text);
-        console.log("Speech options:", options);
 
         await Speech.speak(text, options);
       }
@@ -108,7 +133,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Modal animation (scale effect)
   const showTutorial = () => {
     setIsTutorialVisible(true);
     Animated.spring(scaleValue, {
@@ -126,9 +150,14 @@ export default function HomeScreen() {
     }).start(() => setIsTutorialVisible(false));
   };
 
+  if (isLoading) {
+    return <SplashScreen onFinish={() => setIsLoading(false)} />;
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" }]}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
+      
       <View style={[styles.header, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
         <TouchableOpacity style={styles.headerButton} onPress={() => router.push('settings')}>
           <Ionicons name="settings-outline" size={24} color={isDarkMode ? "white" : "black"} />
@@ -139,7 +168,99 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Modal for Tutorial */}
+      <View style={styles.translationContainer}>
+        <View style={[styles.textContainer, { backgroundColor: isDarkMode ? 'white' : 'white' }]}>
+          <TextInput
+            style={[styles.textArea, { fontSize, color: isDarkMode ? 'black' : 'black' }]}
+            value={inputSpeech}
+            onChangeText={(text) => {
+              console.log("Input changed:", text);
+              setInputSpeech(text);
+            }}
+            placeholder={getPlaceholderText().input}
+            placeholderTextColor={isDarkMode ? '#666' : '#666'}
+            multiline
+          />
+          <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(inputSpeech, true)}>
+            <Ionicons
+              name={isSpeakingInput ? "volume-high" : "volume-medium"}
+              size={24}
+              color={isSpeakingInput ? "#007bff" : isDarkMode ? "black" : "black"}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.controls}>
+        <View style={styles.languageSwitcherContainer}>
+          <View style={[
+            styles.languageToggle, 
+            { backgroundColor: isDarkMode ? '#1A1A1A' : '#F0F0F0' }
+          ]}>
+            <TouchableOpacity
+              onPress={toggleLanguage}
+              style={[
+                styles.languageButton,
+                language === "en" && { backgroundColor: isDarkMode ? '#007AFF' : '#0A84FF' }
+              ]}
+            >
+              <Text style={[
+                styles.languageButtonText,
+                { color: language === "en" ? '#FFFFFF' : (isDarkMode ? '#FFFFFF' : '#000000') }
+              ]}>
+                English
+              </Text>
+            </TouchableOpacity>
+            
+            <View style={styles.arrowContainer}>
+              <Text style={[styles.arrow, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>{arrowDirection}</Text>
+            </View>
+            
+            <TouchableOpacity
+              onPress={toggleLanguage}
+              style={[
+                styles.languageButton,
+                language === "zh" && { backgroundColor: isDarkMode ? '#007AFF' : '#0A84FF' }
+              ]}
+            >
+              <Text style={[
+                styles.languageButtonText,
+                { color: language === "zh" ? '#FFFFFF' : (isDarkMode ? '#FFFFFF' : '#000000') }
+              ]}>
+                中文
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.textContainer}>
+          <TextInput
+            style={[styles.textArea, { fontSize, color: isDarkMode ? 'black' : 'black' }]}
+            value={translation}
+            editable={false}
+            placeholder={getPlaceholderText().output}
+            placeholderTextColor={isDarkMode ? '#666' : '#666'}
+            multiline
+          />
+
+          <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(translation, false)}>
+            <Ionicons
+              name={isSpeakingTranslation ? "volume-high" : "volume-medium"}
+              size={24}
+              color={isSpeakingTranslation ? "#007bff" : "black"}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={handlePress}>
+        {recording ? (
+          <Ionicons name="stop" size={30} color="#fff" />
+        ) : (
+          <Ionicons name="mic-outline" size={30} color="white" />
+        )}
+      </TouchableOpacity>
+      
       <Modal
         transparent={true}
         visible={isTutorialVisible}
@@ -158,7 +279,7 @@ export default function HomeScreen() {
                   2. After recording, the app will transcribe your speech into text and display it.
                 </Text>
                 <Text style={styles.tutorialText}>
-                  3. You can adjust the font size of the text using the + and - buttons.
+                  3. Use the language toggle to switch between English and Chinese.
                 </Text>
                 <Text style={styles.tutorialText}>
                   4. To hear the input speech or translated text, press the speaker icons next to the text.
@@ -177,66 +298,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-
-      <View style={styles.translationContainer}>
-        <View style={[styles.textContainer, { backgroundColor: isDarkMode ? 'white' : 'white' }]}>
-          <TextInput
-            style={[styles.textArea, { fontSize, color: isDarkMode ? 'black' : 'black' }]}
-            value={inputSpeech}
-            editable={false}
-            onChangeText={setInputSpeech}
-            placeholder="Hello"
-            placeholderTextColor={isDarkMode ? '#666' : '#666'}
-            multiline
-          />
-          <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(inputSpeech, true)}>
-            <Ionicons
-              name={isSpeakingInput ? "volume-high" : "volume-medium"}
-              size={24}
-              color={isSpeakingInput ? "#007bff" : isDarkMode ? "black" : "black"}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.controls}>
-          <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(-3)}>
-            <Ionicons name="remove" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.fontSizeDisplay}>
-            <Text style={styles.fontSizeText}>{fontSize}</Text>
-          </View>
-          <TouchableOpacity style={styles.controlButton} onPress={() => adjustFontSize(3)}>
-            <Ionicons name="add" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.textContainer}>
-          <TextInput
-            style={[styles.textArea, { fontSize }]}
-            value={translation}
-            editable={false}
-            onChangeText={translation}
-            placeholder="你好"
-            placeholderTextColor={isDarkMode ? '#666' : '#666'}
-            multiline
-          />
-          <TouchableOpacity style={styles.speakerButton} onPress={() => speakText(translation, false)}>
-            <Ionicons
-              name={isSpeakingTranslation ? "volume-high" : "volume-medium"}
-              size={24}
-              color={isSpeakingTranslation ? "#007bff" : "black"}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handlePress}>
-        {recording ? (
-          <Ionicons name="stop" size={30} color="#fff" />
-        ) : (
-          <Ionicons name="mic-outline" size={30} color="white" />
-        )}
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
