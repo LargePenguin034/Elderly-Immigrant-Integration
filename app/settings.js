@@ -1,31 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  StatusBar, 
-  Modal, 
-  Switch, 
-  Animated, 
-  Easing, 
-  ScrollView, 
-  Alert, 
-  TouchableWithoutFeedback,
-  TextInput,
-  Dimensions
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Modal, Switch,Animated, Easing, ScrollView, Alert, TouchableWithoutFeedback,TextInput,Dimensions} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppContext } from './_layout';
 import emailjs from 'emailjs-com';
-
+import styles from './settingsstyles';
+// Constants for app information
 const APP_VERSION = "1.0.0";
 const DEVELOPER_INFO = "Developed by Team Blue";
 const { width, height } = Dimensions.get('window');
 
 export default function Settings() {
+  // Hooks and state management
   const router = useRouter();
   const [fontSizeModalVisible, setFontSizeModalVisible] = useState(false);
   const { isDarkMode, toggleTheme, fontSize, setFontSize } = useAppContext();
@@ -34,12 +20,15 @@ export default function Settings() {
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [modalAnimation] = useState(new Animated.Value(0));
 
+  // Array of available font sizes
   const fontSizes = Array.from({ length: 16 }, (_, i) => 20 + i * 2);
 
+  // Update StatusBar style based on theme
   useEffect(() => {
     StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
   }, [isDarkMode]);
 
+  // Animation function for modal
   const animateModal = (toValue) => {
     Animated.timing(modalAnimation, {
       toValue,
@@ -49,6 +38,7 @@ export default function Settings() {
     }).start();
   };
 
+  // Functions to handle modal visibility
   const openFontSizeModal = () => {
     setFontSizeModalVisible(true);
     animateModal(1);
@@ -59,15 +49,18 @@ export default function Settings() {
     setTimeout(() => setFontSizeModalVisible(false), 300);
   };
 
+  // Function to update font size
   const handleFontSizeChange = (newSize) => {
     setFontSize(newSize);
     closeFontSizeModal();
   };
 
+  // Function to handle user rating
   const handleRating = (star) => {
     setRating(star);
   };
 
+  // Function to send feedback
   const sendFeedback = () => {
     const templateParams = {
       from_name: "User Feedback",
@@ -91,6 +84,7 @@ export default function Settings() {
     setFeedbackModalVisible(false);
   };
 
+  // Function to render star rating
   const renderStars = () => {
     return [1, 2, 3, 4, 5].map((star) => (
       <TouchableOpacity key={star} onPress={() => handleRating(star)}>
@@ -104,6 +98,7 @@ export default function Settings() {
     ));
   };
 
+  // Function to show About alert
   const showAboutAlert = () => {
     Alert.alert(
       "About",
@@ -112,6 +107,7 @@ export default function Settings() {
     );
   };
 
+  // Reusable component for setting items
   const SettingItem = ({ title, onPress, value, icon }) => (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingItemLeft}>
@@ -129,15 +125,18 @@ export default function Settings() {
     </TouchableOpacity>
   );
 
+  // Main component render
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F5F5F5' }]}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
+      {/* Header */}
       <View style={styles.header}>
-  <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-    <Ionicons name="chevron-back" size={24} color={isDarkMode ? "#4DA6FF" : "#007AFF"} />
-  </TouchableOpacity>
-  <Text style={[styles.headerTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Settings</Text>
-</View>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={isDarkMode ? "#4DA6FF" : "#007AFF"} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Settings</Text>
+      </View>
+      {/* Settings list */}
       <ScrollView style={styles.content}>
         <View style={styles.settingsContainer}>
           <SettingItem 
@@ -273,138 +272,3 @@ export default function Settings() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Centers the title
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  backButton: {
-    position: 'absolute', // Keeps the button aligned to the left
-    left: 16,
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  placeholderView: {
-    width: 40, // Approximate width of the back button
-  },
-  content: {
-    flex: 1,
-  },
-  settingsContainer: {
-    padding: 16,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  settingItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingIcon: {
-    marginRight: 15,
-  },
-  settingText: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  settingValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  valueText: {
-    fontSize: 16,
-    marginRight: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalView: {
-    width: width * 0.9,
-    maxHeight: height * 0.8,
-    borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalScrollView: {
-    maxHeight: 300,
-    width: '100%',
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  optionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  optionText: {
-    fontSize: 18,
-  },
-  starContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  star: {
-    marginHorizontal: 5,
-  },
-  input: {
-    height: 120,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 15,
-    width: '100%',
-    textAlignVertical: 'top',
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButton: {
-    borderRadius: 10,
-    padding: 15,
-    width: '48%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
