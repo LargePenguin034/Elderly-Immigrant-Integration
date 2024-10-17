@@ -14,17 +14,18 @@ const speechClient = new speech.SpeechClient();
 const translate = new Translate();
 
 // WebSocket server for streaming audio
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 8082 });
 
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('Client connected');
   let recognizeStream = null;
+  let isClosed = false;
 
   // Start streaming audio to Google Cloud when a new connection is opened
   ws.on('message', async (message) => {
     const messageString = message.toString();
-    console.log('Received message:', messageString);
+    //console.log('Received message:', messageString);
     const { type, data, device, language } = JSON.parse(messageString);
 
     if (type === 'start') {
@@ -69,15 +70,21 @@ wss.on('connection', (ws) => {
             const [translation] = await translate.translate(transcription, targetLanguage);
 
             // OPENAI context translation
-            //const translation = await contextTranslate(transcription) 
+            //const translation = await contextTranslate(transcription, targetLanguage) 
             console.log('Contexted Translation:', translation);
 
             // Send transcription and translation back to the client
             ws.send(JSON.stringify({ transcription, translation }));
+            
+            console.log('Successfully sent transcription and translation to client')
           }
         })
         .on('error', async (err) => {
           console.error('Speech-to-text error:', err);
+        })
+        .on('end', () => {
+          console.log('Recognition stream ended, closing WebSocket');
+          ws.close();
         });
     }
 
@@ -97,7 +104,7 @@ wss.on('connection', (ws) => {
       if (recognizeStream) {
         recognizeStream.end();
       }
-      ws.close(); // Close the WebSocket connection
+      //ws.close(); // Close the WebSocket connection
     }
   });
 
@@ -107,12 +114,12 @@ wss.on('connection', (ws) => {
     if (recognizeStream) {
       recognizeStream.end();
     }
+  });
 
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
     });
   });
-});
 
 // Start the server
 app.listen(port, () => {

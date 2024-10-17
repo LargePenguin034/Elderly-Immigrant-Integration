@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 // Define Variables
 const WEB_SOCKET = Constants.expoConfig.extra.WEB_SOCKET;
 let ws;
+let intervalId;
 
 // Defnite rocrding quality and output
 const recordingOptions = {
@@ -49,69 +50,74 @@ const recordingOptions = {
  */
 async function startStreaming(setRecording, setInputSpeech, setTranslation, language) {
   try {
-      // Request microphone permissions
-      const perm = await Audio.requestPermissionsAsync();
-      if (perm.status === "granted") {
-          // Set audio mode for recording
-          await Audio.setAudioModeAsync({
-              allowsRecordingIOS: true,
-              playsInSilentModeIOS: true,
+    // Request microphone permissions
+    const perm = await Audio.requestPermissionsAsync();
+    if (perm.status === "granted") {
+      // Set audio mode for recording
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      // Create a new recording instance
+      const recording = new Audio.Recording();
+      await recording.prepareToRecordAsync(recordingOptions);
+      await recording.startAsync(); // Start recording
+      setRecording(recording); // Save the recording instance
+
+      setInputSpeech("Listening..."); // Update UI to show listening status
+
+      // Connect to the WebSocket server
+      ws = new WebSocket(WEB_SOCKET);
+
+      ws.onopen = () => {
+        console.log("WebSocket connected");
+
+        // Start streaming audio to the server, also send the language
+        ws.send(JSON.stringify({ type: "start", device: Platform.OS, language }));
+
+        // Set up a recurring interval to send audio data
+        intervalId = setInterval(async () => {
+          const uri = recording.getURI(); // Get the URI of the recording
+          const fileData = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
           });
+          console.log("Sending audio data");
+          ws.send(JSON.stringify({ type: "audio", data: fileData })); // Send audio data to server
+        }, 2500); // Stream audio every second
 
-          // Create a new recording instance
-          const recording = new Audio.Recording();
-          await recording.prepareToRecordAsync(recordingOptions);
-          await recording.startAsync(); // Start recording
-          setRecording(recording); // Save the recording instance
+        // Stop recording and streaming after a certain time
+        setTimeout(() => {
+          clearInterval(intervalId); // Clear the interval
+          stopStreaming(recording); // Stop the recording and streaming
+        }, 30000); // Adjust timing as needed
+      };
 
-          setInputSpeech("Listening..."); // Update UI to show listening status
+      // Handle incoming messages from the WebSocket
+      ws.onmessage = (event) => {
+        console.log('Received incoming message from the WebSocket')
+        const { transcription, translation } = JSON.parse(event.data);
+        setInputSpeech(transcription); // Update input speech with transcription
+        setTranslation(translation); // Update translation
+      };
 
-          // Connect to the WebSocket server
-          ws = new WebSocket(WEB_SOCKET);
+      // Handle WebSocket errors
+      ws.onerror = (event) => {
+        console.error("WebSocket error observed:", event.message);
+      };
 
-          ws.onopen = () => {
-              console.log("WebSocket connected");
-
-              // Start streaming audio to the server, also send the language
-              ws.send(JSON.stringify({ type: "start", device: Platform.OS, language }));
-              
-              // Set up a recurring interval to send audio data
-              const intervalId = setInterval(async () => {
-                  const uri = recording.getURI(); // Get the URI of the recording
-                  const fileData = await FileSystem.readAsStringAsync(uri, {
-                      encoding: FileSystem.EncodingType.Base64,
-                  });
-                  console.log("Sending audio data");
-                  ws.send(JSON.stringify({ type: "audio", data: fileData })); // Send audio data to server
-              }, 1000); // Stream audio every second
-
-              // Stop recording and streaming after a certain time
-              setTimeout(() => {
-                  clearInterval(intervalId); // Clear the interval
-                  stopStreaming(recording); // Stop the recording and streaming
-              }, 10000); // Adjust timing as needed
-          };
-
-          // Handle incoming messages from the WebSocket
-          ws.onmessage = (event) => {
-              const { transcription, translation } = JSON.parse(event.data);
-              setInputSpeech(transcription); // Update input speech with transcription
-              setTranslation(translation); // Update translation
-          };
-
-          // Handle WebSocket errors
-          ws.onerror = (event) => {
-              console.error("WebSocket error observed:", event.message);
-          };
-
-          // Handle WebSocket close event
-          ws.onclose = () => {
-              setRecording(false)
-              console.log("WebSocket closed");
-          };
-      }
+      // Handle WebSocket close event
+      ws.onclose = (event) => {
+        console.log("WebSocket closed with code:", event.code, "reason:", event.reason);
+        if (intervalId) { 
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        setRecording(null);
+      };
+    }
   } catch (err) {
-      console.log(err); // Log any errors
+    console.log(err); // Log any errors
   }
 }
 
@@ -128,9 +134,9 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
     if (recording) {
       await recording.stopAndUnloadAsync();
     }
-    if (ws) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: "stop" }));
-      ws.close();
+      //ws.close();
     }
   }
   

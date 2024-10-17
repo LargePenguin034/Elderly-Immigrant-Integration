@@ -45,18 +45,18 @@ export default function HomeScreen() {
     StatusBar.setBarStyle(isDarkMode ? "light-content" : "dark-content", true);
   }, [isDarkMode]);
 
-  useEffect(() => {
-    const translateText = async () => {
-      if (inputSpeech) {
-        console.log("Translating:", inputSpeech);
-        const translatedText = await audioUtils.translateText(inputSpeech, language);
-        console.log("Translation result:", translatedText);
-        setTranslation(translatedText);
-      }
-    };
-
-    translateText();
-  }, [inputSpeech, language]);
+  //useEffect(() => {
+    //const translateText = async () => {
+      //if (inputSpeech) {
+        //console.log("Translating:", inputSpeech);
+        //const translatedText = await audioUtils.translateText(inputSpeech, language);
+        //console.log("Translation result:", translatedText);
+        //setTranslation(translatedText);
+      //}
+    //};
+//
+    //translateText();
+  //}, [inputSpeech, language]);
 
   const toggleLanguage = () => {
     setLanguage(prevLang => prevLang === "en" ? "zh" : "en");
@@ -69,7 +69,7 @@ export default function HomeScreen() {
     if (recording) {
       console.log("Calling stopStreaming");
       audioUtils.stopStreaming(recording);
-      setRecording(null);
+      //setRecording(null);
     } else {
       console.log("Calling startStreaming");
       audioUtils.startStreaming(
