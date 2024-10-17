@@ -2,17 +2,22 @@ import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+// SplashScreen component that displays a logo and app name with animation
 const SplashScreen = ({ onFinish }) => {
+  // Create animated values for fade and scale effects
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
+    // Animate the splash screen elements
     Animated.parallel([
+      // Fade in animation
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: true,
       }),
+      // Scale up animation with spring effect
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 4,
@@ -20,6 +25,7 @@ const SplashScreen = ({ onFinish }) => {
       })
     ]).start();
 
+    // Set a timer to fade out the splash screen after 1 second
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -28,14 +34,17 @@ const SplashScreen = ({ onFinish }) => {
       }).start(onFinish);
     }, 1000);
 
+    // Clean up the timer on component unmount
     return () => clearTimeout(timer);
   }, [fadeAnim, scaleAnim]);
 
   return (
+    // Create a gradient background
     <LinearGradient
       colors={['#000000', '#1a1a1a', '#2a2a2a']}
       style={styles.container}
     >
+      {/* Animated container for logo and app name */}
       <Animated.View style={[
         styles.contentContainer,
         {
@@ -43,6 +52,7 @@ const SplashScreen = ({ onFinish }) => {
           transform: [{ scale: scaleAnim }]
         }
       ]}>
+        {/* Logo container with shadow effect */}
         <View style={styles.logoContainer}>
           <Image
             source={require('../assets/translatify-logo.png')}
@@ -50,12 +60,14 @@ const SplashScreen = ({ onFinish }) => {
             resizeMode="contain"
           />
         </View>
+        {/* App name text */}
         <Text style={styles.appName}>Translatify</Text>
       </Animated.View>
     </LinearGradient>
   );
 };
 
+// Styles for the component
 const styles = StyleSheet.create({
   container: {
     flex: 1,
