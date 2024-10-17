@@ -21,8 +21,9 @@ wss.on('connection', (ws) => {
   console.log('Client connected');
   let recognizeStream = null;
   let isClosed = false;
+  let isStopped = false; // Flag to indicate stop received
 
-  // Start streaming audio to Google Cloud when a new connection is opened
+  // Handle incoming messages
   ws.on('message', async (message) => {
     const messageString = message.toString();
     //console.log('Received message:', messageString);
@@ -74,17 +75,32 @@ wss.on('connection', (ws) => {
             console.log('Contexted Translation:', translation);
 
             // Send transcription and translation back to the client
-            ws.send(JSON.stringify({ transcription, translation }));
-            
-            console.log('Successfully sent transcription and translation to client')
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ transcription, translation }), (err) => {
+                if (err) {
+                  console.error('Error sending message:', err);
+                } else {
+                  console.log('Successfully sent transcription and translation to client');
+                  if (isStopped && !isClosed) {
+                    console.log('Closing WebSocket gracefully after final message');
+                    ws.close(1000, 'Normal closure');
+                    isClosed = true;
+                  }
+                }
+              });
+            }
           }
         })
-        .on('error', async (err) => {
+        .on('error', (err) => {
           console.error('Speech-to-text error:', err);
+          if (!isClosed) {
+            ws.close(1011, 'Internal error'); // Close with appropriate error code
+            isClosed = true;
+          }
         })
         .on('end', () => {
-          console.log('Recognition stream ended, closing WebSocket');
-          ws.close();
+          console.log('Recognition stream ended');
+          // Do not close WebSocket here
         });
     }
 
@@ -99,12 +115,13 @@ wss.on('connection', (ws) => {
     }
 
     if (type === 'stop') {
-      // Stop the stream when client ends it and close the connection
-      console.log('Stopping recognition stream and closing connection');
+      // Stop the stream when client ends it
+      console.log('Stopping recognition stream and preparing to close connection');
+      isStopped = true;
       if (recognizeStream) {
         recognizeStream.end();
       }
-      //ws.close(); // Close the WebSocket connection
+      // Do not close the WebSocket here; let the 'data' handler close it after sending
     }
   });
 
@@ -118,8 +135,8 @@ wss.on('connection', (ws) => {
 
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
-    });
   });
+});
 
 // Start the server
 app.listen(port, () => {

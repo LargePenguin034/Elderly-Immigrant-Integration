@@ -68,7 +68,7 @@ export default function HomeScreen() {
   const handlePress = () => {
     if (recording) {
       console.log("Calling stopStreaming");
-      audioUtils.stopStreaming(recording);
+      audioUtils.stopStreaming();
       //setRecording(null);
     } else {
       console.log("Calling startStreaming");
@@ -84,7 +84,7 @@ export default function HomeScreen() {
         },
         language
       );
-      setRecording(true);
+      //setRecording(true);
     }
   };
 
