@@ -89,6 +89,15 @@ The settings screen allows users to customize their experience with options incl
    ```
    Replace the placeholders with your actual credentials.
 
+4. Use own IP address:
+   Edit a `app.json` file in the folder with the following content:
+   ```bash
+   "WEB_SOCKET": "ws://Your.IPV4.Address:8080"
+   ```
+   Find your IPv4 Address:
+   -  On Windows: Open the command prompt (cmd) and type: ```ipconfig``` 
+   -  On macOS/Linux: Open your terminal and run the following command:
+   ```ifconfig | grep inet   ``` 
 4. Start the backend server:
    ```bash
    node backend/server
