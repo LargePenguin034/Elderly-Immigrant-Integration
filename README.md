@@ -34,7 +34,7 @@ Translatify is an innovative, early-stage prototype designed to facilitate real-
 ## Snapshots
 
 ### 1. **Main Translation Interface**
-<img src="assets/Main.jpg" alt="Translation Interface" width="400">
+<img src="assets/Main.jpg" alt="Translation Interface" width="200">
 
 The main interface showcases real-time translation between English and Chinese. It features:
 - Clear, high-contrast text boxes for input and output
@@ -48,7 +48,7 @@ The main interface showcases real-time translation between English and Chinese. 
 The Translatify app icon features a stylized smartphone with "A" and Chinese character speech bubbles, representing the app's bilingual translation capability.
 
 ### 3. **Settings Screen**
-<img src="assets/Settings.jpg" alt="Settings Screen" width="400">
+<img src="assets/Settings.jpg" alt="Settings Screen" width="200">
 
 The settings screen allows users to customize their experience with options including:
 - Font size adjustment
