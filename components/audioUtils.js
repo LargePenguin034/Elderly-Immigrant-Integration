@@ -38,10 +38,10 @@ const recordingOptions = {
 async function startStreaming(setRecording, setInputSpeech, setTranslation, language) {
   try {
     // Prevent starting a new recording if one is already in progress
-    if (currentRecording !== null) {
-      console.warn("A recording is already in progress.");
-      return;
-    }
+    //if (currentRecording !== null) {
+      //console.warn("A recording is already in progress.");
+      //return;
+    //}
 
     // Request microphone permissions
     const perm = await Audio.requestPermissionsAsync();
@@ -89,7 +89,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
         }
       }, 2500); // Stream audio every 2.5 seconds
 
-      // Optionally, set a timeout to stop recording after a certain duration
+      // Set a timeout to stop recording after a certain duration
       // setTimeout(() => {
       //   clearInterval(intervalId); // Clear the interval
       //   stopStreaming(); // Stop the recording and streaming
@@ -172,7 +172,7 @@ async function stopStreaming() {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
-    }, 500); // Adjust the delay as needed to ensure messages are sent
+    }, 2500); // Adjust the delay as needed to ensure messages are sent
   } catch (err) {
     console.error("Error in stopStreaming:", err);
   }

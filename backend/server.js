@@ -82,7 +82,7 @@ wss.on('connection', (ws) => {
                 } else {
                   console.log('Successfully sent transcription and translation to client');
                   if (isStopped && !isClosed) {
-                    console.log('Closing WebSocket gracefully after final message');
+                    console.log('Closing WebSocket after final message');
                     ws.close(1000, 'Normal closure');
                     isClosed = true;
                   }
