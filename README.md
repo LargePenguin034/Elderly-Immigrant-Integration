@@ -85,7 +85,7 @@ The settings screen allows users to customize their experience with options incl
    Create a `.env` file in the `backend` folder with the following content:
    ```
    GOOGLE_APPLICATION_CREDENTIALS=nimble-answer-434823-u3-2c626702566e.json
-   OPEN_API_KEY=your_openai_api_key
+   OPENAI_API_KEY=your_openai_api_key
    ```
    Replace the placeholders with your actual credentials.
 
