@@ -12,7 +12,7 @@ async function contextTranslate(text, language) {
     let prompt;
     if (language === 'en') {
         prompt = "Pretend you are a translator that translates from Chinese to English.";
-    } else if (language === 'zh-CN') {
+    } else if (language === 'zh-CN') { // Fixed this from zh to zh-CN
         prompt = "Pretend you are a translator that translates from English (with Australian slang) to Chinese.";
     }
     const chat_completion = await client.chat.completions.create({
