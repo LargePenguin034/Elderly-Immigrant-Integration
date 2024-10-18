@@ -12,7 +12,7 @@ async function contextTranslate(text, language) {
     let prompt;
     if (language === 'en') {
         prompt = "Pretend you are a translator that translates from Chinese to English.";
-    } else if (language === 'zh') {
+    } else if (language === 'zh-CN') {
         prompt = "Pretend you are a translator that translates from English (with Australian slang) to Chinese.";
     }
     const chat_completion = await client.chat.completions.create({
@@ -24,7 +24,7 @@ async function contextTranslate(text, language) {
             },
             {
                 "role": "user",
-                "content": `Translate: ${text}, Only output the translation and keep the tone`
+                "content": `Translate: ${text}, Only output the translation`
             }
         ],
     })
