@@ -34,7 +34,7 @@ Translatify is an innovative, early-stage prototype designed to facilitate real-
 ## Snapshots
 
 ### 1. **Main Translation Interface**
-<img src="assets/Main.jpg" alt="Translation Interface" width="400">
+<img src="assets/Main.jpg" alt="Translation Interface" width="200">
 
 The main interface showcases real-time translation between English and Chinese. It features:
 - Clear, high-contrast text boxes for input and output
@@ -48,7 +48,7 @@ The main interface showcases real-time translation between English and Chinese. 
 The Translatify app icon features a stylized smartphone with "A" and Chinese character speech bubbles, representing the app's bilingual translation capability.
 
 ### 3. **Settings Screen**
-<img src="assets/Settings.jpg" alt="Settings Screen" width="400">
+<img src="assets/Settings.jpg" alt="Settings Screen" width="200">
 
 The settings screen allows users to customize their experience with options including:
 - Font size adjustment
@@ -85,10 +85,19 @@ The settings screen allows users to customize their experience with options incl
    Create a `.env` file in the `backend` folder with the following content:
    ```
    GOOGLE_APPLICATION_CREDENTIALS=nimble-answer-434823-u3-2c626702566e.json
-   OPEN_API_KEY=your_openai_api_key
+   OPENAI_API_KEY=your_openai_api_key
    ```
    Replace the placeholders with your actual credentials.
 
+4. Use own IP address:
+   Edit a `app.json` file in the folder with the following content:
+   ```bash
+   "WEB_SOCKET": "ws://Your.IPV4.Address:8080"
+   ```
+   Find your IPv4 Address:
+   -  On Windows: Open the command prompt (cmd) and type: ```ipconfig``` 
+   -  On macOS/Linux: Open your terminal and run the following command:
+   ```ifconfig | grep inet   ``` 
 4. Start the backend server:
    ```bash
    node backend/server

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useAppContext } from './_layout';
 import emailjs from 'emailjs-com';
 import styles from './settingsstyles';
+
 // Constants for app information
 const APP_VERSION = "1.0.0";
 const DEVELOPER_INFO = "Developed by Team Blue";
@@ -66,7 +67,7 @@ export default function Settings() {
       from_name: "User Feedback",
       message: `Rating: ${rating} stars\nReview: ${review}`,
     };
-
+    // Sending feedback through the email server
     emailjs.send(
       'service_0hhgwpi',
       'template_ac7x5ad',

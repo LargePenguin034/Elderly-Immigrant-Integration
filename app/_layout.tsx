@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Create the theme and font size context with default values
+// Creating the default values
 const AppContext = createContext({
   isDarkMode: true, // Default to dark mode
   toggleTheme: () => {}, // Placeholder function for toggling theme
