@@ -41,7 +41,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
     // Prevent starting a new recording if one is already in progress
     if (currentRecording !== null) {
       console.warn("A recording is already in progress.");
-      Alert.alert("Recording Active", "Please stop the current recording before starting a new one.");
+      Alert.alert("Recording Active", "Please wait for the translation to complete before starting a new one.");
       return;
     }
 
