@@ -91,13 +91,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
             Alert.alert("Error", "Failed to read audio data.");
           }
         }
-      }, 2500); // Stream audio every 2.5 seconds
-
-      // Optionally, set a timeout to stop recording after a certain duration
-      // setTimeout(() => {
-      //   clearInterval(intervalId); // Clear the interval
-      //   stopStreaming(); // Stop the recording and streaming
-      // }, 30000); // Adjust timing as needed
+      }, 1500); // Stream audio every 1 second (adjust as needed)
     };
 
     // Handle incoming messages from the WebSocket
@@ -134,6 +128,7 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
       }
       if (currentRecording) {
         try {
+          console.log('Unloading and setting recording to false');
           await currentRecording.stopAndUnloadAsync();
           setRecording(false); // Update recording state here
           currentRecording = null; // Reset the recording instance
@@ -181,18 +176,7 @@ async function stopStreaming() {
       intervalId = null;
     }
 
-    if (currentRecording) {
-      await currentRecording.stopAndUnloadAsync();
-      currentRecording = null;
-      //setRecording(false); // Update recording state here
-    }
-
-    // Close the WebSocket after ensuring all messages are sent
-    setTimeout(() => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    }, 500); // Adjust the delay as needed to ensure messages are sent
+    // Do NOT close the WebSocket here; the server will handle it after all translations are sent
   } catch (err) {
     console.error("Error in stopStreaming:", err);
     Alert.alert("Error", "An unexpected error occurred while stopping the recording.");

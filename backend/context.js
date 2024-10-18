@@ -24,7 +24,7 @@ async function contextTranslate(text, language) {
             },
             {
                 "role": "user",
-                "content": `Translate: ${text}, Only output the translation`
+                "content": `Only output the translation. Translate: ${text}.`
             }
         ],
     })

@@ -75,7 +75,7 @@ export default function HomeScreen() {
     if (recording) {
       console.log("Calling stopStreaming");
       audioUtils.stopStreaming();
-      setRecording(false);
+      //setRecording(false);
     } else {
       console.log("Calling startStreaming");
       audioUtils.startStreaming(

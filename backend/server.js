@@ -22,15 +22,14 @@ wss.on('connection', (ws) => {
   let recognizeStream = null;
   let isClosed = false;
   let isStopped = false; // Flag to indicate stop received
+  const translationPromises = []; // Array to track ongoing translation tasks
 
   // Handle incoming messages
   ws.on('message', async (message) => {
     const messageString = message.toString();
-    //console.log('Received message:', messageString);
     const { type, data, device, language } = JSON.parse(messageString);
 
     if (type === 'start') {
-      //console.log('Starting new recognition stream for device:', device);
       const languageCode = language === 'zh' ? 'zh-CN' : 'en-US';
 
       // Determine the configuration based on the device type
@@ -59,7 +58,6 @@ wss.on('connection', (ws) => {
       recognizeStream = speechClient
         .streamingRecognize(config)
         .on('data', async (data) => {
-          //console.log('Data received from Google Speech API', data);
           if (data.results[0] && data.results[0].isFinal && data.results[0].alternatives[0]) {
             const transcription = data.results[0].alternatives[0].transcript;
             console.log('Transcription:', transcription);
@@ -67,24 +65,33 @@ wss.on('connection', (ws) => {
             // Determine target language for translation
             const targetLanguage = language === 'zh' ? 'en' : 'zh-CN';
 
-            // Translate the transcription (google translate)
-            //const [translation] = await translate.translate(transcription, targetLanguage);
+            // Create a translation promise
+            const translationPromise = (async () => {
+              try {
+                // Use your contextTranslate function for translation
+                const translation = await contextTranslate(transcription, targetLanguage); 
+                console.log('Contexted Translation:', translation);
 
-            // OPENAI context translation
-            const translation = await contextTranslate(transcription, targetLanguage); 
-            console.log('Contexted Translation:', translation);
-
-            // Send transcription and translation back to the client
-            if (ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ transcription, translation }), (err) => {
-                if (err) {
-                  console.error('Error sending message:', err);
-                } else {
+                // Send transcription and translation back to the client
+                if (ws.readyState === WebSocket.OPEN) {
+                  await ws.send(JSON.stringify({ transcription, translation }));
                   console.log('Successfully sent transcription and translation to client');
-                  // Do not close WebSocket here
                 }
-              });
-            }
+              } catch (err) {
+                console.error('Error during translation or sending message:', err);
+              }
+            })();
+
+            // Add the promise to the tracker
+            translationPromises.push(translationPromise);
+
+            // Once the promise is settled, remove it from the tracker
+            translationPromise.finally(() => {
+              const index = translationPromises.indexOf(translationPromise);
+              if (index > -1) {
+                translationPromises.splice(index, 1);
+              }
+            });
           }
         })
         .on('error', (err) => {
@@ -96,12 +103,23 @@ wss.on('connection', (ws) => {
         })
         .on('end', () => {
           console.log('Recognition stream ended');
-          // Close the WebSocket gracefully now that the stream has ended
-          if (ws.readyState === WebSocket.OPEN && !isClosed) {
-            ws.close(1000, 'Normal closure');
-            isClosed = true;
-            console.log('WebSocket closed gracefully after all data sent');
-          }
+          // Wait for all translation promises to resolve before closing the WebSocket
+          Promise.all(translationPromises)
+            .then(() => {
+              if (ws.readyState === WebSocket.OPEN && !isClosed) {
+                ws.close(1000, 'Normal closure');
+                isClosed = true;
+                console.log('WebSocket closed gracefully after all data sent');
+              }
+            })
+            .catch((err) => {
+              console.error('Error waiting for translations to complete:', err);
+              if (ws.readyState === WebSocket.OPEN && !isClosed) {
+                ws.close(1011, 'Error during translation processing');
+                isClosed = true;
+                console.log('WebSocket closed due to translation processing error');
+              }
+            });
         });
     }
 
