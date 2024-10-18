@@ -80,16 +80,18 @@ The settings screen allows users to customize their experience with options incl
    ```bash
    npm install
    ```
-
+   
 3. Configure environment variables:
+   Create a Google Service Account key with Speech-to-Text API enabled.
+   Optionally, enable Google Translate API if you want to switch from OpenAI based translation to Google Translate based.
    Create a `.env` file in the `backend` folder with the following content:
    ```
-   GOOGLE_APPLICATION_CREDENTIALS=nimble-answer-434823-u3-2c626702566e.json
+   GOOGLE_APPLICATION_CREDENTIALS=name_of_google_service_account_file.json
    OPENAI_API_KEY=your_openai_api_key
    ```
    Replace the placeholders with your actual credentials.
 
-4. Use own IP address:
+5. Use own IP address:
    Edit a `app.json` file in the folder with the following content:
    ```bash
    "WEB_SOCKET": "ws://Your.IPV4.Address:8082"
