@@ -68,10 +68,10 @@ wss.on('connection', (ws) => {
             const targetLanguage = language === 'zh' ? 'en' : 'zh-CN';
 
             // Translate the transcription (google translate)
-            const [translation] = await translate.translate(transcription, targetLanguage);
+            //const [translation] = await translate.translate(transcription, targetLanguage);
 
             // OPENAI context translation
-            //const translation = await contextTranslate(transcription, targetLanguage) 
+            const translation = await contextTranslate(transcription, targetLanguage); 
             console.log('Contexted Translation:', translation);
 
             // Send transcription and translation back to the client
@@ -81,11 +81,7 @@ wss.on('connection', (ws) => {
                   console.error('Error sending message:', err);
                 } else {
                   console.log('Successfully sent transcription and translation to client');
-                  if (isStopped && !isClosed) {
-                    console.log('Closing WebSocket after final message');
-                    ws.close(1000, 'Normal closure');
-                    isClosed = true;
-                  }
+                  // Do not close WebSocket here
                 }
               });
             }
@@ -100,7 +96,12 @@ wss.on('connection', (ws) => {
         })
         .on('end', () => {
           console.log('Recognition stream ended');
-          // Do not close WebSocket here
+          // Close the WebSocket gracefully now that the stream has ended
+          if (ws.readyState === WebSocket.OPEN && !isClosed) {
+            ws.close(1000, 'Normal closure');
+            isClosed = true;
+            console.log('WebSocket closed gracefully after all data sent');
+          }
         });
     }
 
@@ -121,7 +122,7 @@ wss.on('connection', (ws) => {
       if (recognizeStream) {
         recognizeStream.end();
       }
-      // Do not close the WebSocket here; let the 'data' handler close it after sending
+      // Do not close the WebSocket here; let the 'end' event handler close it after sending
     }
   });
 

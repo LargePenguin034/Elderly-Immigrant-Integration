@@ -2,6 +2,7 @@ import * as FileSystem from "expo-file-system";
 import { Audio } from "expo-av";
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { Alert } from 'react-native';
 
 // Define Variables
 const WEB_SOCKET = Constants.expoConfig.extra.WEB_SOCKET;
@@ -38,15 +39,17 @@ const recordingOptions = {
 async function startStreaming(setRecording, setInputSpeech, setTranslation, language) {
   try {
     // Prevent starting a new recording if one is already in progress
-    //if (currentRecording !== null) {
-      //console.warn("A recording is already in progress.");
-      //return;
-    //}
+    if (currentRecording !== null) {
+      console.warn("A recording is already in progress.");
+      Alert.alert("Recording Active", "Please stop the current recording before starting a new one.");
+      return;
+    }
 
     // Request microphone permissions
     const perm = await Audio.requestPermissionsAsync();
     if (perm.status !== "granted") {
       console.error("Microphone permission not granted.");
+      Alert.alert("Permission Denied", "Please grant microphone permissions to use this feature.");
       return;
     }
 
@@ -85,11 +88,12 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
             ws.send(JSON.stringify({ type: "audio", data: fileData })); // Send audio data to server
           } catch (err) {
             console.error("Error reading audio file:", err);
+            Alert.alert("Error", "Failed to read audio data.");
           }
         }
       }, 2500); // Stream audio every 2.5 seconds
 
-      // Set a timeout to stop recording after a certain duration
+      // Optionally, set a timeout to stop recording after a certain duration
       // setTimeout(() => {
       //   clearInterval(intervalId); // Clear the interval
       //   stopStreaming(); // Stop the recording and streaming
@@ -108,27 +112,41 @@ async function startStreaming(setRecording, setInputSpeech, setTranslation, lang
         }
       } catch (err) {
         console.error("Error parsing incoming message:", err);
+        Alert.alert("Error", "Received malformed data from the server.");
       }
     };
 
     // Handle WebSocket errors
     ws.onerror = (event) => {
       console.error("WebSocket error observed:", event.message);
+      Alert.alert("WebSocket Error", "An error occurred with the WebSocket connection.");
     };
 
     // Handle WebSocket close event
-    ws.onclose = (event) => {
+    ws.onclose = async (event) => {
       console.log("WebSocket closed with code:", event.code, "reason:", event.reason);
       if (intervalId) { 
         clearInterval(intervalId);
         intervalId = null;
       }
-      setRecording(false); // Update recording state here
-      currentRecording = null; // Reset the recording instance
-      ws = null; // Reset the WebSocket instance
+      if (ws) {
+        ws = null;
+      }
+      if (currentRecording) {
+        try {
+          await currentRecording.stopAndUnloadAsync();
+          setRecording(false); // Update recording state here
+          currentRecording = null; // Reset the recording instance
+        } catch (err) {
+          console.error("Error stopping and unloading recording:", err);
+          setRecording(false);
+          currentRecording = null;
+        }
+      }
     };
   } catch (err) {
     console.log("Error in startStreaming:", err); // Log any errors
+    Alert.alert("Error", "An unexpected error occurred while starting the recording.");
   }
 }
 
@@ -147,9 +165,10 @@ async function stopStreaming() {
             encoding: FileSystem.EncodingType.Base64,
           });
           console.log("Sending remaining audio data before stopping");
-          await ws.send(JSON.stringify({ type: "audio", data: fileData }));
+          ws.send(JSON.stringify({ type: "audio", data: fileData }));
         } catch (err) {
           console.error("Error reading audio file during stop:", err);
+          Alert.alert("Error", "Failed to read final audio data.");
         }
       }
 
@@ -165,16 +184,18 @@ async function stopStreaming() {
     if (currentRecording) {
       await currentRecording.stopAndUnloadAsync();
       currentRecording = null;
+      //setRecording(false); // Update recording state here
     }
 
+    // Close the WebSocket after ensuring all messages are sent
     setTimeout(() => {
-      // Close the WebSocket after ensuring all messages are sent
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
-    }, 2500); // Adjust the delay as needed to ensure messages are sent
+    }, 500); // Adjust the delay as needed to ensure messages are sent
   } catch (err) {
     console.error("Error in stopStreaming:", err);
+    Alert.alert("Error", "An unexpected error occurred while stopping the recording.");
   }
 }
 

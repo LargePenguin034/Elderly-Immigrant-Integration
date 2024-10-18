@@ -24,7 +24,7 @@ import styles from './styles';  // Importing styles from the stylesheet
 // HomeScreen component
 export default function HomeScreen() {
   // States for managing recording, speech input, translation, language, etc.
-  const [recording, setRecording] = useState();
+  const [recording, setRecording] = useState(false);
   const [inputSpeech, setInputSpeech] = useState("");  // State for storing input speech text
   const [translation, setTranslation] = useState("");  // State for storing translated text
   const [language, setLanguage] = useState("en");  // Current language (English or Chinese)
@@ -75,7 +75,7 @@ export default function HomeScreen() {
     if (recording) {
       console.log("Calling stopStreaming");
       audioUtils.stopStreaming();
-      //setRecording(null);
+      setRecording(false);
     } else {
       console.log("Calling startStreaming");
       audioUtils.startStreaming(
